@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz Teroka Matematik Tahun 1: Wang Malaysia</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Comic Neue & Fredoka for playful Year 1 look -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        comic: ['Comic Neue', 'cursive'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #fef08a 0%, #bae6fd 50%, #fbcfe8 100%);
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
+        .bouncing {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col items-center justify-start p-3 sm:p-6">
+
+    <div id="app" class="w-full max-w-4xl bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-amber-300 p-4 sm:p-8 my-auto">
+        
+        <!-- Tajuk Utama -->
+        <header class="text-center mb-6">
+            <h1 class="text-3xl sm:text-5xl font-bold text-indigo-600 drop-shadow-md mb-2">🌟 KUIZ PENGEMBARAAN WANG 🌟</h1>
+            <p class="text-lg sm:text-2xl text-pink-600 font-semibold">Misi Harta Karun: Kenal Wang Malaysia (Tahun 1)</p>
+        </header>
+
+        <div id="screen-login" class="space-y-6">
+            <div class="bg-amber-50 border-4 border-amber-200 rounded-2xl p-6 shadow-inner text-center max-w-lg mx-auto">
+                <h2 class="text-2xl sm:text-3xl font-bold text-amber-800 mb-4">Sila Masukkan Maklumat Anda</h2>
+                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-xl font-bold text-slate-700 mb-1">Nama Penuh:</label>
+                        <input type="text" id="input-nama" required placeholder="Contoh: Ahmad Ammar" 
+                            class="w-full px-4 py-3 text-xl border-4 border-amber-300 rounded-xl focus:outline-none focus:border-indigo-500 bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xl font-bold text-slate-700 mb-1">Kelas:</label>
+                        <select id="input-kelas" required 
+                            class="w-full px-4 py-3 text-xl border-4 border-amber-300 rounded-xl focus:outline-none focus:border-indigo-500 bg-white">
+                            <option value="">-- Pilih Kelas --</option>
+                            <option value="1 Sukses">1 Sukses</option>
+                            <option value="1 Super">1 Super</option>
+                        </select>
+                    </div>
+                    <button type="submit" 
+                        class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-2xl font-bold rounded-2xl shadow-lg transform transition active:scale-95 cursor-pointer">
+                        🚀 Mula Pengembaraan!
+                    </button>
+                </form>
+            </div>
+
+            <!-- Papan Markah Ringkas di Skrin Utama -->
+            <div class="mt-8">
+                <h3 class="text-2xl font-bold text-indigo-700 text-center mb-4">🏆 Papan Markah Rakan Pengembara</h3>
+                <div id="leaderboard-container-login" class="bg-indigo-50 rounded-2xl p-4 border-2 border-indigo-200 max-h-60 overflow-y-auto">
+                    <p class="text-center text-gray-500">Sedang memuatkan senarai pemain...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-game" class="hidden space-y-6">
+            <div class="flex flex-wrap justify-between items-center bg-indigo-100 p-4 rounded-2xl border-2 border-indigo-300 text-lg sm:text-xl font-bold">
+                <div>Pemain: <span id="display-player-name" class="text-indigo-700"></span></div>
+                <div>Dijawab: <span id="display-q-num" class="text-pink-600">0</span> / 15</div>
+                <div>Markah: <span id="display-score" class="text-emerald-600">0</span></div>
+            </div>
+
+            <!-- Panduan / Misi Utama -->
+            <div class="text-center bg-amber-100 border-4 border-amber-300 rounded-2xl p-4 shadow">
+                <p id="grid-instruction" class="text-xl sm:text-2xl font-bold text-amber-900">
+                    🔍 Pilih & Ketik Mana-mana Kotak Harta Karun di Bawah untuk Membuka Soalan Wang!
+                </p>
+            </div>
+
+            <!-- Peta Harta Karun: 15 Kotak Tersembunyi -->
+            <div id="treasure-grid" class="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4 p-4 bg-gradient-to-b from-sky-200 to-emerald-200 rounded-3xl border-4 border-indigo-400 shadow-inner">
+                <!-- 15 Kotak Dijana Oleh JS -->
+            </div>
+
+            <!-- Modal Soalan (Muncul Apabila Kotak Ditekan) -->
+            <div id="question-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-40">
+                <div class="bg-amber-50 border-4 border-amber-400 rounded-3xl p-6 max-w-2xl w-full text-center shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center border-b-2 border-amber-200 pb-2">
+                        <span id="question-badge" class="bg-pink-500 text-white text-lg px-4 py-1 rounded-full font-bold">Soalan</span>
+                        <span class="text-amber-800 font-bold text-lg">Pilih jawapan yang betul:</span>
+                    </div>
+
+                    <h2 id="question-text" class="text-2xl sm:text-3xl font-bold text-slate-800 leading-snug">
+                        Soalan akan muncul di sini...
+                    </h2>
+
+                    <!-- Visual Grafik Duit Malaysia -->
+                    <div id="question-image-container" class="flex justify-center items-center py-2">
+                        <!-- SVG / Grafik Duit akan dimasukkan di sini -->
+                    </div>
+
+                    <!-- Pilihan Jawapan -->
+                    <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                        <!-- Butang pilihan jawapan -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-result" class="hidden text-center space-y-6 py-6">
+            <div class="bouncing text-6xl sm:text-8xl">🎉</div>
+            <h2 class="text-3xl sm:text-5xl font-bold text-indigo-700">Tahniah, Pakar Wang Cilik!</h2>
+            <p class="text-xl sm:text-2xl text-slate-700">Anda telah berjaya menamatkan 15 soalan berkenaan Wang Malaysia.</p>
+            <div class="bg-emerald-100 border-4 border-emerald-300 rounded-3xl p-6 max-w-md mx-auto">
+                <p class="text-2xl font-bold text-slate-700">Markah Akhir Anda:</p>
+                <p id="final-score" class="text-5xl sm:text-6xl font-extrabold text-emerald-600 my-2">0 / 15</p>
+                <p id="final-remark" class="text-xl text-indigo-800 font-semibold"></p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4 pt-4">
+                <button onclick="location.reload()" 
+                    class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-2xl font-bold rounded-2xl shadow-lg transition transform active:scale-95 cursor-pointer">
+                    🔄 Main Semula
+                </button>
+            </div>
+
+            <!-- Papan Markah Penuh -->
+            <div class="mt-8">
+                <h3 class="text-2xl font-bold text-indigo-700 mb-4">🏆 Papan Markah Keseluruhan</h3>
+                <div id="leaderboard-container-result" class="bg-indigo-50 rounded-2xl p-4 border-2 border-indigo-200 max-h-60 overflow-y-auto">
+                    <p class="text-center text-gray-500">Memuatkan markah...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Mesej Kreatif -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center border-4 border-indigo-400 shadow-2xl space-y-4">
+            <div id="modal-icon" class="text-5xl">✨</div>
+            <h3 id="modal-title" class="text-2xl font-bold text-indigo-700">Hebat!</h3>
+            <p id="modal-message" class="text-xl text-slate-600">Mesej di sini...</p>
+            <button onclick="closeModal()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold rounded-xl shadow cursor-pointer">
+                Teruskan 🌟
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Setup
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'kuiz-matematik-thn1-v1';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "mock", projectId: "mock" };
+
+        let db, auth;
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
+            } else {
+                signInAnonymously(auth).catch(err => console.error("Auth error:", err));
+            }
+        } catch (e) {
+            console.log("Mod luar talian (Offline mode aktif)");
+        }
+
+        // --- Pembina SVG Grafik Duit Malaysia Terang & Berwarna ---
+        function getCoinSVG(val) {
+            let color = "#cbd5e1"; // 5sen silver
+            let textColor = "#334155";
+            let size = "w-16 h-16";
+            if (val === "10 sen") { color = "#cbd5e1"; size = "w-20 h-20"; }
+            if (val === "20 sen") { color = "#facc15"; textColor = "#854d0e"; size = "w-20 h-20"; }
+            if (val === "50 sen") { color = "#eab308"; textColor = "#713f12"; size = "w-24 h-24"; }
+
+            return `
+            <div class="${size} rounded-full bg-gradient-to-br from-yellow-100 via-[${color}] to-yellow-600 border-4 border-amber-300 shadow-md flex items-center justify-center font-bold text-slate-800 text-lg sm:text-xl transform hover:scale-110 transition p-1 text-center" style="background-color: ${color}; color: ${textColor};">
+                ${val}
+            </div>`;
+        }
+
+        function getNoteSVG(val, colorBg, textColor, label) {
+            return `
+            <div class="w-48 h-24 sm:w-56 sm:h-28 rounded-xl ${colorBg} border-4 border-white/80 shadow-lg flex flex-col justify-between p-2 font-bold ${textColor} transform hover:scale-105 transition">
+                <div class="flex justify-between items-center text-xs sm:text-sm">
+                    <span>BANK NEGARA MALAYSIA</span>
+                    <span class="text-sm sm:text-lg">${label}</span>
+                </div>
+                <div class="text-center text-2xl sm:text-3xl tracking-widest font-extrabold my-auto">
+                    ${val}
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span>RINGGIT MALAYSIA</span>
+                    <span class="text-sm sm:text-lg">${label}</span>
+                </div>
+            </div>`;
+        }
+
+        const questions = [
+            {
+                id: 1,
+                icon: "🪙",
+                label: "Kotak 1",
+                q: "Berapakah nilai bagi syiling emas di bawah?",
+                renderGraphics: () => `<div class="flex justify-center">${getCoinSVG("50 sen")}</div>`,
+                options: ["10 sen", "20 sen", "50 sen", "RM1"],
+                answer: 2
+            },
+            {
+                id: 2,
+                icon: "💵",
+                label: "Kotak 2",
+                q: "Apakah nilai wang kertas BIRU Malaysia ini?",
+                renderGraphics: () => `<div class="flex justify-center">${getNoteSVG("RM 1", "bg-blue-600", "text-white", "RM1")}</div>`,
+                options: ["RM 1", "RM 5", "RM 10", "RM 20"],
+                answer: 0
+            },
+            {
+                id: 3,
+                icon: "👝",
+                label: "Kotak 3",
+                q: "Apakah nilai wang kertas HIJAU Malaysia ini?",
+                renderGraphics: () => `<div class="flex justify-center">${getNoteSVG("RM 5", "bg-emerald-600", "text-white", "RM5")}</div>`,
+                options: ["RM 1", "RM 5", "RM 10", "RM 50"],
+                answer: 1
+            },
+            {
+                id: 4,
+                icon: "💶",
+                label: "Kotak 4",
+                q: "Apakah nilai wang kertas MERAH Malaysia ini?",
+                renderGraphics: () => `<div class="flex justify-center">${getNoteSVG("RM 10", "bg-red-600", "text-white", "RM10")}</div>`,
+                options: ["RM 1", "RM 5", "RM 10", "RM 20"],
+                answer: 2
+            },
+            {
+                id: 5,
+                icon: "🪙",
+                label: "Kotak 5",
+                q: "Berapakah jumlah nilai dua keping syiling 20 sen ini?",
+                renderGraphics: () => `<div class="flex gap-4 justify-center">${getCoinSVG("20 sen")} ${getCoinSVG("20 sen")}</div>`,
+                options: ["20 sen", "30 sen", "40 sen", "50 sen"],
+                answer: 2
+            },
+            {
+                id: 6,
+                icon: "💰",
+                label: "Kotak 6",
+                q: "Berapakah jumlah keseluruhan wang syiling di bawah?",
+                renderGraphics: () => `<div class="flex gap-3 justify-center items-center">${getCoinSVG("50 sen")} ${getCoinSVG("10 sen")}</div>`,
+                options: ["50 sen", "60 sen", "70 sen", "RM 1"],
+                answer: 1
+            },
+            {
+                id: 7,
+                icon: "✏️",
+                label: "Kotak 7",
+                q: "Aina ada RM5. Dia beli pensel berharga RM2. Berapakah baki wang Aina?",
+                renderGraphics: () => `<div class="flex gap-2 justify-center items-center">${getNoteSVG("RM 5", "bg-emerald-600", "text-white", "RM5")} <span class="text-3xl font-bold text-red-500">➖ RM 2</span></div>`,
+                options: ["RM 1", "RM 2", "RM 3", "RM 4"],
+                answer: 2
+            },
+            {
+                id: 8,
+                icon: "🐖",
+                label: "Kotak 8",
+                q: "Mengapakah kita perlu menyimpan lebihan wang belanja ke dalam tabung?",
+                renderGraphics: () => `<div class="text-6xl my-2">🐖💰</div>`,
+                options: ["Membazir wang", "Amalan berjimat cermat", "Supaya wang rosak", "Beli mainan mahal"],
+                answer: 1
+            },
+            {
+                id: 9,
+                icon: "🪙",
+                label: "Kotak 9",
+                q: "Berapakah keping syiling 50 sen yang diperlukan untuk menjadikan RM1?",
+                renderGraphics: () => `<div class="flex gap-3 justify-center items-center">${getCoinSVG("50 sen")} <span class="text-3xl font-bold text-indigo-600">+ ?</span></div>`,
+                options: ["1 keping", "2 keping", "3 keping", "5 keping"],
+                answer: 1
+            },
+            {
+                id: 10,
+                icon: "🛍️",
+                label: "Kotak 10",
+                q: "Ali beli pemadam berharga 80 sen. Wang manakah yang cukup untuk membayar?",
+                renderGraphics: () => `<div class="text-4xl">🧹 = 80 sen</div>`,
+                options: ["50 sen", "20 sen", "RM 1", "10 sen"],
+                answer: 2
+            },
+            {
+                id: 11,
+                icon: "🏷️",
+                label: "Kotak 11",
+                q: "Berapakah jumlah dua keping wang kertas RM1 di bawah?",
+                renderGraphics: () => `<div class="flex gap-2 justify-center">${getNoteSVG("RM 1", "bg-blue-600", "text-white", "RM1")} ${getNoteSVG("RM 1", "bg-blue-600", "text-white", "RM1")}</div>`,
+                options: ["RM 1", "RM 2", "RM 3", "RM 5"],
+                answer: 1
+            },
+            {
+                id: 12,
+                icon: "🪙",
+                label: "Kotak 12",
+                q: "Antara berikut, syiling manakah yang paling kecil nilainya?",
+                renderGraphics: () => `<div class="flex gap-3 justify-center">${getCoinSVG("5 sen")} ${getCoinSVG("10 sen")} ${getCoinSVG("20 sen")} ${getCoinSVG("50 sen")}</div>`,
+                options: ["50 sen", "20 sen", "10 sen", "5 sen"],
+                answer: 3
+            },
+            {
+                id: 13,
+                icon: "🎁",
+                label: "Kotak 13",
+                q: "Berapakah jumlah wang RM5 dan RM1 ini?",
+                renderGraphics: () => `<div class="flex gap-2 justify-center">${getNoteSVG("RM 5", "bg-emerald-600", "text-white", "RM5")} ${getNoteSVG("RM 1", "bg-blue-600", "text-white", "RM1")}</div>`,
+                options: ["RM 4", "RM 5", "RM 6", "RM 10"],
+                answer: 2
+            },
+            {
+                id: 14,
+                icon: "📚",
+                label: "Kotak 14",
+                q: "Siti ada RM10. Dia membeli buku RM5. Berapakah baki wang Siti?",
+                renderGraphics: () => `<div class="flex gap-2 justify-center items-center">${getNoteSVG("RM 10", "bg-red-600", "text-white", "RM10")} <span class="text-3xl font-bold text-red-500">➖ RM 5</span></div>`,
+                options: ["RM 2", "RM 3", "RM 5", "RM 8"],
+                answer: 2
+            },
+            {
+                id: 15,
+                icon: "👑",
+                label: "Kotak 15",
+                q: "Wang kertas manakah yang paling tinggi nilainya di bawah?",
+                renderGraphics: () => `<div class="flex gap-2 justify-center">${getNoteSVG("RM 1", "bg-blue-600", "text-white", "RM1")} ${getNoteSVG("RM 5", "bg-emerald-600", "text-white", "RM5")} ${getNoteSVG("RM 10", "bg-red-600", "text-white", "RM10")}</div>`,
+                options: ["RM 1", "RM 5", "RM 10", "Semua sama"],
+                answer: 2
+            }
+        ];
+
+        let answeredCount = 0;
+        let score = 0;
+        let playerData = { name: "", class: "" };
+        let activeQuestionIndex = null;
+        let answeredQuestions = new Array(15).fill(false);
+
+        window.handleLogin = function(event) {
+            event.preventDefault();
+            const name = document.getElementById('input-nama').value.trim();
+            const kelas = document.getElementById('input-kelas').value;
+
+            if(!name || !kelas) {
+                showModal("⚠️ Perhatian", "Sila masukkan nama dan pilih kelas anda terlebih dahulu!");
+                return;
+            }
+
+            playerData.name = name;
+            playerData.class = kelas;
+
+            document.getElementById('display-player-name').innerText = `${name} (${kelas})`;
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+
+            renderTreasureGrid();
+        }
+
+        // Paparkan 15 Kotak Harta Karun di Skrin Utama
+        function renderTreasureGrid() {
+            const grid = document.getElementById('treasure-grid');
+            grid.innerHTML = '';
+
+            questions.forEach((q, index) => {
+                const isAnswered = answeredQuestions[index];
+                const box = document.createElement('button');
+                
+                box.className = `flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl border-4 font-extrabold shadow-lg transition transform cursor-pointer min-h-[110px] sm:min-h-[140px] ${
+                    isAnswered 
+                        ? 'bg-emerald-200 border-emerald-500 text-emerald-800 opacity-80 cursor-not-allowed scale-95' 
+                        : 'bg-amber-300 hover:bg-amber-400 border-amber-600 text-amber-950 hover:scale-105 active:scale-95 animate-bounce'
+                }`;
+
+                box.innerHTML = `
+                    <span class="text-4xl sm:text-5xl mb-1">${isAnswered ? '✅' : q.icon}</span>
+                    <span class="text-base sm:text-xl">${isAnswered ? 'Selesai' : q.label}</span>
+                `;
+
+                if(!isAnswered) {
+                    box.onclick = () => openQuestionModal(index);
+                }
+
+                grid.appendChild(box);
+            });
+
+            document.getElementById('display-q-num').innerText = answeredCount;
+            document.getElementById('display-score').innerText = score;
+        }
+
+        function openQuestionModal(index) {
+            activeQuestionIndex = index;
+            const qObj = questions[index];
+
+            document.getElementById('question-badge').innerText = `Kotak ${index + 1} daripada 15`;
+            document.getElementById('question-text').innerText = qObj.q;
+
+            // Masukkan grafik duit
+            const imgContainer = document.getElementById('question-image-container');
+            imgContainer.innerHTML = qObj.renderGraphics ? qObj.renderGraphics() : '';
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            qObj.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full py-4 px-6 bg-white hover:bg-indigo-100 border-4 border-indigo-300 hover:border-indigo-600 rounded-2xl text-xl sm:text-2xl font-bold text-slate-800 shadow transition transform active:scale-95 cursor-pointer text-left flex items-center justify-between";
+                btn.innerHTML = `<span>✨ ${opt}</span> <span class="text-indigo-500 font-bold">Pilih ➔</span>`;
+                btn.onclick = () => submitAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('question-modal').classList.remove('hidden');
+            document.getElementById('question-modal').classList.add('flex');
+        }
+
+        function closeQuestionModal() {
+            document.getElementById('question-modal').classList.add('hidden');
+            document.getElementById('question-modal').classList.remove('flex');
+        }
+
+        function submitAnswer(selectedIndex) {
+            const qObj = questions[activeQuestionIndex];
+            answeredQuestions[activeQuestionIndex] = true;
+            answeredCount++;
+
+            closeQuestionModal();
+
+            if(selectedIndex === qObj.answer) {
+                score += 1;
+                showModal("🌟 Tahniah!", "Jawapan anda betul! Pandai sekali!");
+            } else {
+                showModal("❌ Kurang Tepat", `Jawapan yang betul ialah: ${qObj.options[qObj.answer]}`);
+            }
+
+            renderTreasureGrid();
+
+            if(answeredCount >= 15) {
+                setTimeout(() => {
+                    finishGame();
+                }, 1500);
+            }
+        }
+
+        async function finishGame() {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+
+            document.getElementById('final-score').innerText = `${score} / 15`;
+            
+            let remark = "Hebat! Teruskan usaha yang cemerlang!";
+            if(score < 8) remark = "Bagus, cuba ulangkaji lagi tajuk Wang Malaysia ya!";
+            else if(score >= 12) remark = "Tahniah! Anda seorang Pakar Wang Cilik Tahun 1!";
+            document.getElementById('final-remark').innerText = remark;
+
+            if(db) {
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'), {
+                        name: playerData.name,
+                        class: playerData.class,
+                        score: score,
+                        timestamp: new Date().toISOString()
+                    });
+                } catch (e) {
+                    console.error("Gagal simpan markah:", e);
+                }
+            }
+        }
+
+        function setupLeaderboard() {
+            if(!db) return;
+            try {
+                const qRef = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+                onSnapshot(qRef, (snapshot) => {
+                    let players = [];
+                    snapshot.forEach(doc => {
+                        players.push(doc.data());
+                    });
+
+                    players.sort((a, b) => b.score - a.score);
+
+                    renderLeaderboardHTML('leaderboard-container-login', players);
+                    renderLeaderboardHTML('leaderboard-container-result', players);
+                }, (error) => {
+                    console.error("Ralat leaderboard:", error);
+                });
+            } catch(e) {
+                console.log("Leaderboard offline mode");
+            }
+        }
+
+        function renderLeaderboardHTML(containerId, players) {
+            const container = document.getElementById(containerId);
+            if(!container) return;
+
+            if(players.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 font-semibold">Belum ada pemain berdaftar. Jadilah yang pertama!</p>`;
+                return;
+            }
+
+            let html = `<table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b-2 border-indigo-200 text-indigo-800 text-lg">
+                        <th class="p-2">No.</th>
+                        <th class="p-2">Nama Pemain</th>
+                        <th class="p-2">Kelas</th>
+                        <th class="p-2 text-right">Markah</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            players.forEach((p, index) => {
+                let badge = index === 0 ? '👑 ' : (index === 1 ? '🥈 ' : (index === 2 ? '🥉 ' : ''));
+                html += `<tr class="border-b border-indigo-100 hover:bg-white/50 text-base sm:text-lg font-semibold">
+                    <td class="p-2">${badge}${index + 1}</td>
+                    <td class="p-2 text-indigo-700">${escapeHtml(p.name)}</td>
+                    <td class="p-2 text-slate-600">${escapeHtml(p.class)}</td>
+                    <td class="p-2 text-right text-emerald-600 font-bold">${p.score} / 15</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        window.showModal = function(title, message) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            document.getElementById('custom-modal').classList.remove('hidden');
+            document.getElementById('custom-modal').classList.add('flex');
+        }
+
+        window.closeModal = function() {
+            document.getElementById('custom-modal').classList.add('hidden');
+            document.getElementById('custom-modal').classList.remove('flex');
+        }
+
+        setupLeaderboard();
+    </script>
+</body>
+</html>
