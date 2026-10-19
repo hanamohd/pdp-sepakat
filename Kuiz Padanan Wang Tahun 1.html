@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz Padanan Wang RM1 - RM100 Tahun 1</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka & Comic Neue -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        comic: ['Comic Neue', 'cursive'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #fef08a 0%, #bae6fd 50%, #fbcfe8 100%);
+            min-height: 100vh;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        /* Kesan Kad Flip 3D */
+        .card-container {
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .card-container.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border: 4px solid #fef08a;
+            color: #78350f;
+        }
+
+        .card-back {
+            background-color: #ffffff;
+            border: 4px solid #818cf8;
+            transform: rotateY(180deg);
+        }
+
+        .card-container.matched .card-back {
+            border-color: #10b981;
+            background-color: #ecfdf5;
+        }
+
+        @keyframes pulse-gentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .bounce-gentle {
+            animation: pulse-gentle 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col items-center justify-center p-3 sm:p-6 min-h-screen">
+
+    <div id="app" class="w-full max-w-4xl bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border-4 border-amber-300 p-4 sm:p-8 my-auto">
+        
+        <!-- Header Utama -->
+        <header class="text-center mb-4 sm:mb-6">
+            <h1 class="text-3xl sm:text-5xl font-extrabold text-indigo-700 drop-shadow-sm tracking-wide">
+                💰 KUIZ PADANAN WANG RM1 - RM100 🎯
+            </h1>
+            <p class="text-lg sm:text-2xl text-pink-600 font-bold mt-1">
+                Matematik Tahun 1 (Cari Padanan & Jawab Soalan!)
+            </p>
+        </header>
+
+        <!-- ================= SKRIN 1: NAMA & KELAS ================= -->
+        <div id="screen-login" class="space-y-6 py-4">
+            <div class="bg-amber-50 border-4 border-amber-300 rounded-3xl p-6 sm:p-8 shadow-inner text-center max-w-md mx-auto">
+                <div class="text-6xl mb-3 bounce-gentle">🎒</div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-amber-900 mb-6">Maklumat Murid</h2>
+                
+                <form id="form-login" onsubmit="handleStartGame(event)" class="space-y-5 text-left">
+                    <div>
+                        <label class="block text-xl sm:text-2xl font-bold text-slate-700 mb-2">Nama Penuh:</label>
+                        <input type="text" id="input-nama" required placeholder="Contoh: Muhammad Ali" 
+                            class="w-full px-4 py-3 text-xl sm:text-2xl border-4 border-amber-300 rounded-2xl focus:outline-none focus:border-indigo-600 bg-white font-bold text-indigo-900 shadow-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-xl sm:text-2xl font-bold text-slate-700 mb-2">Kelas:</label>
+                        <select id="input-kelas" required 
+                            class="w-full px-4 py-3 text-xl sm:text-2xl border-4 border-amber-300 rounded-2xl focus:outline-none focus:border-indigo-600 bg-white font-bold text-indigo-900 shadow-sm cursor-pointer">
+                            <option value="">-- Pilih Kelas --</option>
+                            <option value="1 SUKSES">1 SUKSES</option>
+                            <option value="1 SUPER">1 SUPER</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-2xl sm:text-3xl font-extrabold rounded-2xl shadow-xl transform transition active:scale-95 cursor-pointer border-b-4 border-teal-800">
+                        🚀 MULA PERMAINAN
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= SKRIN 2: PAPARAN GAME (4x4 GRID) ================= -->
+        <div id="screen-game" class="hidden space-y-4">
+            
+            <!-- Dashboard Info Pemain & Progress -->
+            <div class="flex flex-wrap justify-between items-center bg-indigo-100 p-3 sm:p-4 rounded-2xl border-3 border-indigo-300 text-lg sm:text-2xl font-bold gap-2">
+                <div class="text-indigo-900">👤 Murid: <span id="display-player" class="text-indigo-700 font-extrabold"></span></div>
+                <div class="text-pink-700">🧩 Padanan: <span id="display-matched-count" class="text-pink-600 font-extrabold">0</span> / 8</div>
+                <div class="text-emerald-700">⭐ Markah: <span id="display-score" class="text-emerald-600 font-extrabold">0</span> / 16</div>
+            </div>
+
+            <!-- Arahan Ringkas -->
+            <div class="text-center bg-amber-100 border-3 border-amber-300 rounded-2xl p-3 shadow-sm">
+                <p class="text-lg sm:text-2xl font-bold text-amber-900">
+                    🔍 Pilih 2 kotak yang sama! Apabila padan, soalan matematik akan keluar.
+                </p>
+            </div>
+
+            <!-- Grid 4x4 (16 Kotak Permainan) -->
+            <div id="grid-container" class="grid grid-cols-4 gap-2.5 sm:gap-4 p-3 sm:p-6 bg-gradient-to-br from-sky-200 via-indigo-100 to-amber-100 rounded-3xl border-4 border-indigo-400 shadow-inner max-w-2xl mx-auto">
+                <!-- 16 Kad akan dijana menggunakan JavaScript -->
+            </div>
+        </div>
+
+        <!-- ================= SKRIN 3: KEPUTUSAN AKHIR ================= -->
+        <div id="screen-result" class="hidden text-center space-y-6 py-6">
+            <div class="bounce-gentle text-7xl sm:text-8xl">🏆</div>
+            <h2 class="text-3xl sm:text-5xl font-extrabold text-indigo-700">Tahniah! Anda Berjaya!</h2>
+            
+            <div class="bg-gradient-to-b from-amber-50 to-emerald-50 border-4 border-emerald-400 rounded-3xl p-6 sm:p-8 max-w-lg mx-auto shadow-xl space-y-4">
+                <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 border-b-2 border-emerald-200 pb-3">Keputusan Permainan</h3>
+                
+                <div class="text-xl sm:text-2xl font-semibold text-slate-700 space-y-2 text-left px-4">
+                    <p>👤 <span class="font-bold">Nama:</span> <span id="result-name" class="text-indigo-700"></span></p>
+                    <p>🏫 <span class="font-bold">Kelas:</span> <span id="result-class" class="text-indigo-700"></span></p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border-2 border-emerald-300 shadow-inner my-4">
+                    <p class="text-xl sm:text-2xl font-bold text-slate-600">Markah Keseluruhan:</p>
+                    <p id="result-score" class="text-5xl sm:text-7xl font-extrabold text-emerald-600 my-2">0 / 16</p>
+                    <p id="result-remark" class="text-lg sm:text-2xl font-bold text-indigo-800 mt-2"></p>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" 
+                class="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-2xl sm:text-3xl font-bold rounded-2xl shadow-xl transform transition active:scale-95 cursor-pointer">
+                🔄 Main Semula
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ================= MODAL SOALAN INTERAKTIF ================= -->
+    <div id="question-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 z-50">
+        <div class="bg-amber-50 border-4 border-amber-400 rounded-3xl p-5 sm:p-8 max-w-2xl w-full text-center shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+            
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center border-b-2 border-amber-200 pb-2">
+                <span id="question-badge" class="bg-pink-500 text-white text-base sm:text-xl px-4 py-1.5 rounded-full font-extrabold">
+                    Soalan Matematik
+                </span>
+                <span id="attempt-badge" class="bg-amber-200 text-amber-900 text-sm sm:text-lg px-3 py-1 rounded-lg font-bold">
+                    Percubaan 1 (2 Markah)
+                </span>
+            </div>
+
+            <!-- Teks Soalan -->
+            <h3 id="question-text" class="text-2xl sm:text-3xl font-extrabold text-slate-800 leading-snug">
+                Soalan akan dipaparkan di sini...
+            </h3>
+
+            <!-- Visual Soalan (Duit / Item) -->
+            <div id="question-graphics" class="flex justify-center items-center my-3 min-h-[90px]">
+                <!-- Grafik Wang akan dipaparkan di sini -->
+            </div>
+
+            <!-- Pilihan Jawapan -->
+            <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
+                <!-- Butang pilihan jawapan -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL MESEJ / MAKLUM BALAS ================= -->
+    <div id="message-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center border-4 border-indigo-400 shadow-2xl space-y-4">
+            <div id="msg-icon" class="text-6xl">✨</div>
+            <h3 id="msg-title" class="text-2xl sm:text-3xl font-extrabold text-indigo-700">Hebat!</h3>
+            <p id="msg-body" class="text-xl sm:text-2xl font-bold text-slate-700 leading-normal">Mesej di sini...</p>
+            <button onclick="closeMessageModal()" 
+                class="w-full py-3 sm:py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-2xl font-bold rounded-2xl shadow-md transition transform active:scale-95 cursor-pointer">
+                Teruskan 🌟
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= LOGIK JAVASCRIPT PERMAINAN ================= -->
+    <script>
+        
+        // Penjana Visual Wang Kertas Malaysia (RM1 - RM100)
+        function createBanknoteSVG(value, bgClass, textColor, label) {
+            return `
+            <div class="w-28 h-16 sm:w-44 sm:h-22 rounded-xl ${bgClass} border-2 sm:border-3 border-white/90 shadow-md flex flex-col justify-between p-1.5 font-extrabold ${textColor} transform hover:scale-105 transition m-0.5">
+                <div class="flex justify-between items-center text-[8px] sm:text-xs">
+                    <span>BANK NEGARA MALAYSIA</span>
+                    <span class="text-xs sm:text-sm">${label}</span>
+                </div>
+                <div class="text-center text-base sm:text-2xl tracking-wider font-black my-auto">
+                    ${value}
+                </div>
+                <div class="flex justify-between items-center text-[8px] sm:text-xs">
+                    <span>RINGGIT MALAYSIA</span>
+                    <span class="text-xs sm:text-sm">${label}</span>
+                </div>
+            </div>`;
+        }
+
+        // Grafik untuk 8 Set Kad
+        function getItemGraphics(id) {
+            switch(id) {
+                case 1: return createBanknoteSVG("RM 1", "bg-blue-600", "text-white", "RM1");
+                case 2: return createBanknoteSVG("RM 5", "bg-emerald-600", "text-white", "RM5");
+                case 3: return createBanknoteSVG("RM 10", "bg-red-600", "text-white", "RM10");
+                case 4: return createBanknoteSVG("RM 20", "bg-amber-500", "text-white", "RM20");
+                case 5: return createBanknoteSVG("RM 50", "bg-cyan-700", "text-white", "RM50");
+                case 6: return createBanknoteSVG("RM 100", "bg-purple-700", "text-white", "RM100");
+                case 7: return `<div class="text-4xl sm:text-6xl">📚</div>`; // Buku Latihan
+                case 8: return `<div class="text-4xl sm:text-6xl">🐖💰</div>`; // Tabung Simpanan
+                default: return `🪙`;
+            }
+        }
+
+        // 8 Set Soalan Matematik mengikut DSKP & Buku Teks Tahun 1 (Wang RM1 - RM100)
+        const questionsList = [
+            {
+                id: 1,
+                q: "Apakah nilai wang kertas BIRU Malaysia ini?",
+                graphics: () => `<div class="flex justify-center">${createBanknoteSVG("RM 1", "bg-blue-600", "text-white", "RM1")}</div>`,
+                options: ["RM 1", "RM 5", "RM 10", "RM 20"],
+                answer: 0
+            },
+            {
+                id: 2,
+                q: "Apakah nilai wang kertas HIJAU Malaysia ini?",
+                graphics: () => `<div class="flex justify-center">${createBanknoteSVG("RM 5", "bg-emerald-600", "text-white", "RM5")}</div>`,
+                options: ["RM 1", "RM 5", "RM 10", "RM 50"],
+                answer: 1
+            },
+            {
+                id: 3,
+                q: "Apakah nilai wang kertas MERAH Malaysia ini?",
+                graphics: () => `<div class="flex justify-center">${createBanknoteSVG("RM 10", "bg-red-600", "text-white", "RM10")}</div>`,
+                options: ["RM 5", "RM 10", "RM 20", "RM 50"],
+                answer: 1
+            },
+            {
+                id: 4,
+                q: "Apakah nilai wang kertas OREN Malaysia ini?",
+                graphics: () => `<div class="flex justify-center">${createBanknoteSVG("RM 20", "bg-amber-500", "text-white", "RM20")}</div>`,
+                options: ["RM 10", "RM 20", "RM 50", "RM 100"],
+                answer: 1
+            },
+            {
+                id: 5,
+                q: "Berapakah jumlah bagi RM10 + RM20?",
+                graphics: () => `<div class="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">${createBanknoteSVG("RM 10", "bg-red-600", "text-white", "RM10")} <span class="text-2xl sm:text-3xl font-extrabold text-indigo-600">➕</span> ${createBanknoteSVG("RM 20", "bg-amber-500", "text-white", "RM20")}</div>`,
+                options: ["RM 20", "RM 30", "RM 40", "RM 50"],
+                answer: 1
+            },
+            {
+                id: 6,
+                q: "Aina ada RM50. Dia beli buku RM20. Berapakah baki wang Aina? (RM50 - RM20)",
+                graphics: () => `<div class="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">${createBanknoteSVG("RM 50", "bg-cyan-700", "text-white", "RM50")} <span class="text-2xl sm:text-3xl font-extrabold text-pink-600">➖ RM20</span></div>`,
+                options: ["RM 10", "RM 20", "RM 30", "RM 40"],
+                answer: 2
+            },
+            {
+                id: 7,
+                q: "Berapakah jumlah bagi RM1 + RM5?",
+                graphics: () => `<div class="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">${createBanknoteSVG("RM 1", "bg-blue-600", "text-white", "RM1")} <span class="text-2xl sm:text-3xl font-extrabold text-indigo-600">➕</span> ${createBanknoteSVG("RM 5", "bg-emerald-600", "text-white", "RM5")}</div>`,
+                options: ["RM 4", "RM 5", "RM 6", "RM 10"],
+                answer: 2
+            },
+            {
+                id: 8,
+                q: "Mengapakah kita perlu menyimpan lebihan wang belanja ke dalam tabung?",
+                graphics: () => `<div class="text-5xl sm:text-6xl my-1">🐖💰</div>`,
+                options: ["Membazir wang", "Amalan berjimat cermat", "Supaya wang hilang", "Beli mainan mahal"],
+                answer: 1
+            }
+        ];
+
+        let playerData = { name: '', class: '' };
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let totalScore = 0;
+        let isBoardLocked = false;
+
+        let activeQuestion = null;
+        let currentAttempt = 1;
+
+        function handleStartGame(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('input-nama').value.trim();
+            const classInput = document.getElementById('input-kelas').value;
+
+            if(!nameInput || !classInput) {
+                showMessageModal("⚠️ Perhatian", "Sila masukkan nama dan pilih kelas terlebih dahulu!");
+                return;
+            }
+
+            playerData.name = nameInput;
+            playerData.class = classInput;
+
+            document.getElementById('display-player').innerText = `${playerData.name} (${playerData.class})`;
+            
+            document.getElementById('screen-login').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+
+            initGame();
+        }
+
+        // Menjana 16 Kad (8 Pasangan / Grid 4x4)
+        function initGame() {
+            let cardDeck = [];
+            for(let i = 1; i <= 8; i++) {
+                cardDeck.push({ id: i, itemId: i });
+                cardDeck.push({ id: i, itemId: i });
+            }
+
+            // Rawak susunan kad (Shuffle)
+            cards = cardDeck.sort(() => Math.random() - 0.5);
+
+            const gridContainer = document.getElementById('grid-container');
+            gridContainer.innerHTML = '';
+
+            cards.forEach((card, index) => {
+                const cardElem = document.createElement('div');
+                cardElem.className = 'card-container h-20 sm:h-32 cursor-pointer';
+                cardElem.dataset.index = index;
+                cardElem.dataset.itemId = card.itemId;
+
+                cardElem.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front text-2xl sm:text-4xl font-extrabold">
+                            ${index + 1}
+                        </div>
+                        <div class="card-back">
+                            ${getItemGraphics(card.itemId)}
+                        </div>
+                    </div>
+                `;
+
+                cardElem.onclick = () => flipCard(cardElem, index);
+                gridContainer.appendChild(cardElem);
+            });
+
+            matchedPairs = 0;
+            totalScore = 0;
+            updateDashboard();
+        }
+
+        function flipCard(cardElem, index) {
+            if (isBoardLocked) return;
+            if (cardElem.classList.contains('flipped') || cardElem.classList.contains('matched')) return;
+
+            cardElem.classList.add('flipped');
+            flippedCards.push({ elem: cardElem, index: index, itemId: cards[index].itemId });
+
+            if (flippedCards.length === 2) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            isBoardLocked = true;
+            const [card1, card2] = flippedCards;
+
+            if (card1.itemId === card2.itemId) {
+                setTimeout(() => {
+                    card1.elem.classList.add('matched');
+                    card2.elem.classList.add('matched');
+                    matchedPairs++;
+                    updateDashboard();
+
+                    openQuestionModal(card1.itemId);
+                    flippedCards = [];
+                }, 600);
+            } else {
+                setTimeout(() => {
+                    card1.elem.classList.remove('flipped');
+                    card2.elem.classList.remove('flipped');
+                    flippedCards = [];
+                    isBoardLocked = false;
+                }, 1000);
+            }
+        }
+
+        function openQuestionModal(itemId) {
+            activeQuestion = questionsList.find(q => q.id === itemId);
+            currentAttempt = 1;
+
+            renderQuestionModalUI();
+
+            document.getElementById('question-modal').classList.remove('hidden');
+            document.getElementById('question-modal').classList.add('flex');
+        }
+
+        function renderQuestionModalUI() {
+            document.getElementById('question-badge').innerText = `Soalan Set ${activeQuestion.id} daripada 8`;
+            
+            const attemptBadge = document.getElementById('attempt-badge');
+            if (currentAttempt === 1) {
+                attemptBadge.innerText = "Percubaan 1 (2 Markah)";
+                attemptBadge.className = "bg-amber-200 text-amber-900 text-sm sm:text-lg px-3 py-1 rounded-lg font-bold";
+            } else {
+                attemptBadge.innerText = "Percubaan 2 (1 Markah - Peluang Kedua!)";
+                attemptBadge.className = "bg-orange-200 text-orange-900 text-sm sm:text-lg px-3 py-1 rounded-lg font-bold bounce-gentle";
+            }
+
+            document.getElementById('question-text').innerText = activeQuestion.q;
+            document.getElementById('question-graphics').innerHTML = activeQuestion.graphics ? activeQuestion.graphics() : '';
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            activeQuestion.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full py-3.5 px-5 bg-white hover:bg-indigo-100 border-3 border-indigo-300 hover:border-indigo-600 rounded-2xl text-xl sm:text-2xl font-bold text-slate-800 shadow transition transform active:scale-95 cursor-pointer text-left flex items-center justify-between";
+                btn.innerHTML = `<span>✨ ${opt}</span> <span class="text-indigo-600 font-extrabold text-lg sm:text-xl">Pilih ➔</span>`;
+                btn.onclick = () => handleAnswerSubmission(idx);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswerSubmission(selectedIndex) {
+            const isCorrect = (selectedIndex === activeQuestion.answer);
+
+            if (isCorrect) {
+                let pointsGained = (currentAttempt === 1) ? 2 : 1;
+                totalScore += pointsGained;
+                updateDashboard();
+
+                closeQuestionModal();
+                showMessageModal("🌟 TAHNIAH! BETUL!", `Jawapan anda tepat! Anda mendapat ${pointsGained} markah.`);
+
+                isBoardLocked = false;
+                checkGameOver();
+            } else {
+                if (currentAttempt === 1) {
+                    currentAttempt = 2;
+                    showMessageModal("❌ JAWAPAN KURANG TEPAT", "Jangan risau! Anda diberi Peluang Kedua untuk menjawab soalan ini semula.");
+                    renderQuestionModalUI();
+                } else {
+                    closeQuestionModal();
+                    showMessageModal("❌ KURANG TEPAT", `Jawapan yang betul ialah: ${activeQuestion.options[activeQuestion.answer]}. Teruskan usaha!`);
+                    
+                    isBoardLocked = false;
+                    checkGameOver();
+                }
+            }
+        }
+
+        function closeQuestionModal() {
+            document.getElementById('question-modal').classList.add('hidden');
+            document.getElementById('question-modal').classList.remove('flex');
+        }
+
+        function updateDashboard() {
+            document.getElementById('display-matched-count').innerText = matchedPairs;
+            document.getElementById('display-score').innerText = totalScore;
+        }
+
+        function checkGameOver() {
+            if (matchedPairs >= 8) {
+                setTimeout(() => {
+                    showFinalResult();
+                }, 1200);
+            }
+        }
+
+        function showFinalResult() {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+
+            document.getElementById('result-name').innerText = playerData.name;
+            document.getElementById('result-class').innerText = playerData.class;
+            document.getElementById('result-score').innerText = `${totalScore} / 16`;
+
+            let remark = "";
+            if (totalScore >= 13) {
+                remark = "🌟 Cemerlang! Anda seorang Pakar Wang Cilik Tahun 1!";
+            } else if (totalScore >= 8) {
+                remark = "👍 Syabas! Keputusan yang baik, teruskan latihan!";
+            } else {
+                remark = "💪 Boleh cuba lagi! Mari ulangkaji topik Wang Malaysia.";
+            }
+            document.getElementById('result-remark').innerText = remark;
+        }
+
+        function showMessageModal(title, body) {
+            document.getElementById('msg-title').innerText = title;
+            document.getElementById('msg-body').innerText = body;
+            document.getElementById('message-modal').classList.remove('hidden');
+            document.getElementById('message-modal').classList.add('flex');
+        }
+
+        function closeMessageModal() {
+            document.getElementById('message-modal').classList.add('hidden');
+            document.getElementById('message-modal').classList.remove('flex');
+        }
+    </script>
+</body>
+</html>
