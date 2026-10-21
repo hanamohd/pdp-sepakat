@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz Interaktif Reka Bentuk Pengaturcaraan Tahun 5</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Fredoka & Quicksand for Primary School Visual Appeal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pastelRed: '#FF9AA2',
+                        pastelDarkRed: '#E56B70',
+                        pastelPurple: '#C7CEEA',
+                        pastelDarkPurple: '#9381FF',
+                        pastelPink: '#FFDAC1',
+                        pastelBg: '#FAF5FF',
+                        cardBg: '#FFF0F5'
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        quicksand: ['Quicksand', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #FFF0F5 0%, #F3E8FF 50%, #E6E6FA 100%);
+            min-height: 100vh;
+        }
+
+        /* Card Flip Animation */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F3E8FF;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #C7CEEA;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9381FF;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased selection:bg-pastelDarkPurple selection:text-white flex flex-col min-h-screen">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white/80 backdrop-blur-md border-b-4 border-pastelDarkPurple/30 sticky top-0 z-40 px-4 py-3 shadow-sm">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pastelDarkRed to-pastelDarkPurple flex items-center justify-center text-white shadow-md">
+                    <i class="fa-solid fa-microchip text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-fredoka text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pastelDarkRed to-pastelDarkPurple">
+                        REKA BENTUK PENGATURCARAAN
+                    </h1>
+                    <p class="text-xs text-purple-600 font-semibold hidden sm:block">RBT Tahun 5 • Kuiz Padanan Interaktif</p>
+                </div>
+            </div>
+            
+            <div id="userInfoHeader" class="hidden flex items-center gap-2 bg-purple-50 px-3 py-1.5 rounded-full border-2 border-purple-200">
+                <i class="fa-solid fa-user-circle text-pastelDarkPurple text-xl"></i>
+                <span id="headerPlayerName" class="font-bold text-purple-900 text-sm md:text-base">Murid</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-3 md:p-6">
+        <div class="w-full max-w-5xl">
+
+            <!-- 1. LANDING / ENTRY PAGE -->
+            <section id="viewLanding" class="bg-white/90 backdrop-blur rounded-3xl p-6 md:p-10 shadow-xl border-4 border-white text-center max-w-xl mx-auto">
+                <div class="inline-block p-4 bg-purple-100 rounded-full mb-4 text-pastelDarkPurple text-4xl animate-bounce">
+                    <i class="fa-solid fa-gamepad"></i>
+                </div>
+                <h2 class="font-fredoka text-2xl md:text-3xl font-bold text-purple-900 mb-2">Selamat Datang!</h2>
+                <p class="text-gray-600 mb-6 text-sm md:text-base">Sila masukkan nama anda untuk memulakan Permainan Padanan Kad & Kuiz RBT Tahun 5.</p>
+                
+                <form id="formStart" onsubmit="startGame(event)" class="space-y-4">
+                    <div class="text-left">
+                        <label for="playerName" class="block text-sm font-bold text-purple-900 mb-1 pl-1">Nama Murid / Pemain:</label>
+                        <input type="text" id="playerName" required placeholder="Contoh: Ahmad Zaki" 
+                            class="w-full px-4 py-3 rounded-2xl border-2 border-purple-200 focus:border-pastelDarkPurple focus:ring-4 focus:ring-purple-100 text-lg font-semibold text-gray-800 outline-none transition-all">
+                    </div>
+
+                    <button type="submit" class="w-full py-4 bg-gradient-to-r from-pastelDarkRed to-pastelDarkPurple hover:opacity-95 text-white font-fredoka text-xl font-bold rounded-2xl shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <span>MULA MAIN</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="mt-6 pt-6 border-t border-purple-100 flex justify-center gap-4">
+                    <button onclick="showDashboardModal()" class="text-xs md:text-sm text-purple-700 font-bold hover:underline flex items-center gap-1.5">
+                        <i class="fa-solid fa-trophy text-yellow-500"></i> Lihat Rekod Markah
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2. GAME BOARD VIEW (5x6 Grid) -->
+            <section id="viewGame" class="hidden">
+                <!-- Status Bar -->
+                <div class="bg-white/90 backdrop-blur rounded-2xl p-4 mb-4 shadow-md border-2 border-purple-100 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500 text-sm font-bold">Langkah:</span>
+                        <span id="statMoves" class="bg-purple-100 text-purple-900 font-fredoka px-3 py-1 rounded-xl font-bold">0</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500 text-sm font-bold">Padanan Selesai:</span>
+                        <span id="statMatched" class="bg-emerald-100 text-emerald-800 font-fredoka px-3 py-1 rounded-xl font-bold">0 / 15</span>
+                    </div>
+                    <button onclick="resetCurrentGame()" class="text-xs md:text-sm bg-red-100 text-red-600 px-3 py-1.5 rounded-xl font-bold hover:bg-red-200 transition-colors flex items-center gap-1">
+                        <i class="fa-solid fa-rotate-right"></i> Semula
+                    </button>
+                </div>
+
+                <!-- Instruction Banner -->
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl p-3 mb-4 shadow text-center font-bold text-sm md:text-base flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-lightbulb text-yellow-300 animate-pulse"></i>
+                    <span>Cari 2 kad imej yang sama! Soalan kuiz akan muncul apabila pasangan yang sama ditemui.</span>
+                </div>
+
+                <!-- 5 x 6 Grid (30 Cards) -->
+                <div id="gridBoard" class="grid grid-cols-5 md:grid-cols-6 gap-2 md:gap-3 perspective-1000">
+                    <!-- Cards injected by JavaScript -->
+                </div>
+            </section>
+
+            <!-- 3. FINAL RESULTS VIEW -->
+            <section id="viewResults" class="hidden bg-white/95 backdrop-blur rounded-3xl p-6 md:p-10 shadow-xl border-4 border-white text-center max-w-2xl mx-auto">
+                <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-500 text-4xl mx-auto mb-4 border-4 border-yellow-200 animate-bounce">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+                <h2 class="font-fredoka text-3xl font-bold text-purple-900 mb-1">Tahniah! Permainan Tamat</h2>
+                <p class="text-gray-600 mb-6 font-semibold">Anda telah menyelesaikan semua 15 padanan dan soalan!</p>
+
+                <!-- Score Card -->
+                <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200 mb-6 text-center shadow-inner">
+                    <p class="text-sm text-purple-700 font-bold uppercase tracking-wider mb-1">Nama Pemain</p>
+                    <h3 id="resultPlayerName" class="text-2xl font-fredoka font-bold text-purple-900 mb-4">-</h3>
+                    
+                    <div class="inline-block bg-white px-8 py-4 rounded-2xl shadow-md border border-purple-100">
+                        <p class="text-xs text-gray-500 font-bold uppercase mb-1">Jumlah Markah Akhir</p>
+                        <div class="flex items-baseline justify-center gap-1">
+                            <span id="resultScore" class="text-5xl font-fredoka font-bold text-pastelDarkRed">0</span>
+                            <span class="text-xl font-bold text-gray-400">/ 30</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button onclick="restartFullGame()" class="py-3 px-6 bg-gradient-to-r from-pastelDarkRed to-pastelDarkPurple hover:opacity-95 text-white font-bold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> Main Semula
+                    </button>
+                    <button onclick="showDashboardModal()" class="py-3 px-6 bg-purple-100 text-purple-900 hover:bg-purple-200 font-bold rounded-2xl transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-list-ol"></i> Lihat Dashboard
+                    </button>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- QUESTION MODAL -->
+    <div id="modalQuestion" class="fixed inset-0 bg-purple-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-5 md:p-8 shadow-2xl border-4 border-purple-200 transform transition-all duration-300 scale-100 max-h-[90vh] overflow-y-auto">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b pb-3 mb-4 border-purple-100">
+                <div class="flex items-center gap-2">
+                    <span id="modalBadgeFormat" class="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-bold rounded-full uppercase">
+                        Bentuk 1: 4 Pilihan Jawapan
+                    </span>
+                    <span id="modalAttemptBadge" class="px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">
+                        Percubaan #1 (2 Markah)
+                    </span>
+                </div>
+                <div class="text-xs font-bold text-gray-400">
+                    Soalan <span id="modalQuestionNum">1</span> / 15
+                </div>
+            </div>
+
+            <!-- Question Image/Icon Context -->
+            <div class="flex items-center gap-4 bg-purple-50 p-4 rounded-2xl mb-4 border border-purple-100">
+                <div id="modalImageContainer" class="w-16 h-16 rounded-xl bg-white flex items-center justify-center text-3xl shadow-sm text-pastelDarkPurple shrink-0">
+                    <i class="fa-solid fa-code"></i>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold uppercase text-purple-500 tracking-wider">Topik Padanan</h3>
+                    <p id="modalTopicTitle" class="font-fredoka text-lg text-purple-950 font-bold">Struktur Kawalan</p>
+                </div>
+            </div>
+
+            <!-- Question Text -->
+            <div class="mb-6">
+                <p id="modalQuestionText" class="text-base md:text-xl font-bold text-gray-800 leading-relaxed">
+                    Apakah soalan yang dikehendaki?
+                </p>
+            </div>
+
+            <!-- Feedback Alert (Incorrect Attempt Notice) -->
+            <div id="modalFeedback" class="hidden mb-4 p-3 bg-red-100 border-2 border-red-300 rounded-2xl text-red-700 text-sm font-bold flex items-center gap-2 animate-shake">
+                <i class="fa-solid fa-circle-exclamation text-lg"></i>
+                <span id="modalFeedbackText">Jawapan salah! Anda ada 1 lagi peluang (1 markah).</span>
+            </div>
+
+            <!-- Question Body (Dynamic per Format) -->
+            <div id="modalQuestionBody" class="space-y-3 mb-6">
+                <!-- Injected dynamically -->
+            </div>
+
+            <!-- Action Button for Matching/Fill-blank formats -->
+            <div id="modalSubmitContainer" class="hidden">
+                <button onclick="submitCustomAnswer()" class="w-full py-3.5 bg-gradient-to-r from-pastelDarkRed to-pastelDarkPurple text-white font-fredoka font-bold rounded-2xl shadow-md hover:opacity-95 transition-all text-lg">
+                    Hantar Jawapan
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- DASHBOARD MODAL (SENARAI NAMA & MARKAH) -->
+    <div id="modalDashboard" class="fixed inset-0 bg-purple-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border-4 border-purple-200 max-h-[85vh] flex flex-col">
+            <div class="flex justify-between items-center pb-3 border-b border-purple-100 mb-4">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-yellow-500 text-2xl"></i>
+                    <h3 class="font-fredoka text-xl font-bold text-purple-900">Dashboard Markah Murid</h3>
+                </div>
+                <button onclick="closeDashboardModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="overflow-y-auto flex-grow pr-1">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-purple-100 text-purple-900 text-xs font-bold uppercase rounded-xl">
+                            <th class="p-3 rounded-l-xl">#</th>
+                            <th class="p-3">Nama Pemain</th>
+                            <th class="p-3 text-center">Markah (Max 30)</th>
+                            <th class="p-3 text-right rounded-r-xl">Tarikh</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboardTableBody" class="divide-y divide-purple-50 text-sm font-semibold">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+                <div id="dashboardEmptyMsg" class="hidden text-center py-8 text-gray-400 font-medium">
+                    Belum ada rekod permainan.
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-purple-100 mt-4 flex justify-between items-center">
+                <button onclick="clearScoreHistory()" class="text-xs text-red-500 hover:underline font-bold">Padam Rekod</button>
+                <button onclick="closeDashboardModal()" class="px-5 py-2 bg-purple-900 text-white font-bold rounded-xl text-sm">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           1. DATA SETS (15 Sets of Questions & Images divided into 4 Formats)
+           Format 1 (1-5): 4 Pilihan Jawapan (Multiple Choice)
+           Format 2 (6-10): Betul / Salah (True / False)
+           Format 3 (11-13): Padankan Pasangan (Matching Pair)
+           Format 4 (14-15): Isi Tempat Kosong / Pilihan Kata (Fill/Select Concept)
+           ========================================================================== */
+        
+        const QUESTION_DATABASE = [
+            // FORMAT 1: 4 Pilihan Jawapan (Soalan 1 - 5)
+            {
+                id: 1,
+                topic: "Struktur Kawalan Pilihan",
+                icon: "fa-code-branch",
+                color: "text-rose-500",
+                format: "mcq",
+                formatLabel: "Bentuk 1: 4 Pilihan Jawapan",
+                question: "Apakah maksud Struktur Kawalan Pilihan dalam pengaturcaraan?",
+                options: [
+                    "Langkah yang mempunyai dua atau lebih set tindakan sebagai pilihan",
+                    "Satu set tindakan yang sentiasa berulang tanpa henti",
+                    "Urutan arahan dari atas ke bawah secara lurus",
+                    "Satu fungsi untuk memadamkan atau mematikan papan mikropengawal"
+                ],
+                answer: 0
+            },
+            {
+                id: 2,
+                topic: "Struktur Kawalan Ulangan",
+                icon: "fa-arrows-spin",
+                color: "text-purple-500",
+                format: "mcq",
+                formatLabel: "Bentuk 1: 4 Pilihan Jawapan",
+                question: "Kata kunci apakah yang digunakan dalam pseudokod untuk menunjukkan kawalan ulangan?",
+                options: [
+                    "JIKA ... MAKA",
+                    "SELAGI ... TAMAT SELAGI",
+                    "MULA ... TAMAT",
+                    "MASUKKAN ... PAPARKAN"
+                ],
+                answer: 1
+            },
+            {
+                id: 3,
+                topic: "Perkakasan Mikropengawal",
+                icon: "fa-lightbulb",
+                color: "text-amber-500",
+                format: "mcq",
+                formatLabel: "Bentuk 1: 4 Pilihan Jawapan",
+                question: "Apakah fungsi komponen LED dalam projek reka bentuk pengaturcaraan?",
+                options: [
+                    "Mengeluarkannya isyarat dalam bentuk bunyi",
+                    "Mengurangkan arus elektrik dalam litar",
+                    "Mengeluarkan isyarat dalam bentuk cahaya",
+                    "Membuat gerakan bersudut sehingga 360 darjah"
+                ],
+                answer: 2
+            },
+            {
+                id: 4,
+                topic: "Simbol Carta Alir",
+                icon: "fa-diamond",
+                color: "text-emerald-500",
+                format: "mcq",
+                formatLabel: "Bentuk 1: 4 Pilihan Jawapan",
+                question: "Simbol berbentuk 'Rombus' (Diamond) dalam carta alir digunakan untuk:",
+                options: [
+                    "Menunjukkan permulaan atau penamat carta alir",
+                    "Menguji syarat dalam algoritma",
+                    "Memproses input yang dimasukkan",
+                    "Membaca input atau memaparkan output"
+                ],
+                answer: 1
+            },
+            {
+                id: 5,
+                topic: "Ralat Pengaturcaraan",
+                icon: "fa-bug",
+                color: "text-red-500",
+                format: "mcq",
+                formatLabel: "Bentuk 1: 4 Pilihan Jawapan",
+                question: "Apakah yang dimaksudkan dengan 'Ralat' dalam algoritma?",
+                options: [
+                    "Kelajuan muat naik atur cara yang tinggi",
+                    "Kesilapan pada algoritma yang menyebabkan output salah dihasilkan",
+                    "Proses menyambung kabel USB ke papan mikropengawal",
+                    "Langkah membuat reka bentuk fizikal pagar keselamatan"
+                ],
+                answer: 1
+            },
+
+            // FORMAT 2: Betul / Salah (Soalan 6 - 10)
+            {
+                id: 6,
+                topic: "Papan Mikropengawal",
+                icon: "fa-microchip",
+                color: "text-indigo-500",
+                format: "tf",
+                formatLabel: "Bentuk 2: Betul / Salah",
+                question: "Papan mikropengawal boleh menerima input, memproses data, dan mengeluarkan output berdasarkan atur cara.",
+                options: ["BETUL", "SALAH"],
+                answer: 0
+            },
+            {
+                id: 7,
+                topic: "Fungsi Pembaz (Buzzer)",
+                icon: "fa-volume-high",
+                color: "text-pink-500",
+                format: "tf",
+                formatLabel: "Bentuk 2: Betul / Salah",
+                question: "Komponen Pembaz (Buzzer) berfungsi menghasilkan isyarat visual dalam bentuk warna lampu yang berkelip.",
+                options: ["BETUL", "SALAH"],
+                answer: 1 // SALAH (Kerana ia hasilkan bunyi)
+            },
+            {
+                id: 8,
+                topic: "Motor Servo",
+                icon: "fa-gear",
+                color: "text-cyan-500",
+                format: "tf",
+                formatLabel: "Bentuk 2: Betul / Salah",
+                question: "Motor Servo digunakan untuk membuat gerakan bersudut (contohnya menggerakkan palang pagar keselamatan).",
+                options: ["BETUL", "SALAH"],
+                answer: 0
+            },
+            {
+                id: 9,
+                topic: "Penggunaan Suis Tekan",
+                icon: "fa-toggle-on",
+                color: "text-orange-500",
+                format: "tf",
+                formatLabel: "Bentuk 2: Betul / Salah",
+                question: "Suis tekan digunakan untuk memutuskan dan menyambungkan litar elektrik.",
+                options: ["BETUL", "SALAH"],
+                answer: 0
+            },
+            {
+                id: 10,
+                topic: "Struktur Jujukan",
+                icon: "fa-list-ol",
+                color: "text-blue-500",
+                format: "tf",
+                formatLabel: "Bentuk 2: Betul / Salah",
+                question: "Struktur kawalan jujukan mengandungi syarat 'JIKA' untuk membuat keputusan bagi langkah berikutnya.",
+                options: ["BETUL", "SALAH"],
+                answer: 1 // SALAH (Jujukan tiada syarat pilihan)
+            },
+
+            // FORMAT 3: Padankan Pasangan (Soalan 11 - 13)
+            {
+                id: 11,
+                topic: "Padankan Komponen & Fungsi",
+                icon: "fa-plug",
+                color: "text-teal-500",
+                format: "match",
+                formatLabel: "Bentuk 3: Padankan Komponen",
+                question: "Padankan komponen berikut dengan fungsinya yang betul:",
+                matchLeft: "Perintang Tetap (Resistor)",
+                matchOptions: [
+                    "Mengehadkan arus elektrik dalam litar",
+                    "Membuat gerakan berputar 360 darjah",
+                    "Mengeluarkan bunyi amaran",
+                    "Menyimpan fail atur cara .hex"
+                ],
+                answer: 0
+            },
+            {
+                id: 12,
+                topic: "Padankan Simbol Carta Alir",
+                icon: "fa-shapes",
+                color: "text-violet-500",
+                format: "match",
+                formatLabel: "Bentuk 3: Padankan Simbol",
+                question: "Padankan bentuk 'OVAL / TERMINAL' dalam carta alir dengan fungsinya:",
+                matchLeft: "Simbol Oval (Terminal)",
+                matchOptions: [
+                    "Permulaan atau penamat sesuatu carta alir",
+                    "Menguji syarat benar atau salah",
+                    "Arahan untuk memproses input",
+                    "Menunjukkan arah aliran aktiviti"
+                ],
+                answer: 0
+            },
+            {
+                id: 13,
+                topic: "Padankan Istilah Pengaturcaraan",
+                icon: "fa-laptop-code",
+                color: "text-fuchsia-500",
+                format: "match",
+                formatLabel: "Bentuk 3: Padankan Istilah",
+                question: "Padankan istilah 'Pseudokod' dengan penerangan yang paling tepat:",
+                matchLeft: "Pseudokod",
+                matchOptions: [
+                    "Perihal langkah-langkah algoritma menggunakan teks/bahasa biasa",
+                    "Peta bergambar menggunakan simbol-simbol piawai",
+                    "Sejenis peranti keras mikropengawal",
+                    "Kabel USB untuk muat naik atur cara"
+                ],
+                answer: 0
+            },
+
+            // FORMAT 4: Melengkapkan / Pilih Jawapan Konsep (Soalan 14 - 15)
+            {
+                id: 14,
+                topic: "Muat Naik Atur Cara",
+                icon: "fa-upload",
+                color: "text-lime-600",
+                format: "fill",
+                formatLabel: "Bentuk 4: Melengkapkan Konsep",
+                question: "Lengkapkan ayat ini: Untuk memindahkan atur cara dari komputer ke papan mikropengawal, kita menggunakan kabel ________.",
+                fillOptions: ["USB", "Audio", "Rangkaian (LAN)", "Bateri 9V"],
+                answer: 0
+            },
+            {
+                id: 15,
+                topic: "Aplikasi Blok Grafik",
+                icon: "fa-cubes",
+                color: "text-amber-600",
+                format: "fill",
+                formatLabel: "Bentuk 4: Melengkapkan Konsep",
+                question: "Contoh perisian pengaturcaraan berasaskan blok arahan visual yang dipelajari ialah ________.",
+                fillOptions: ["mBlock / Scratch", "Microsoft Word", "Adobe Photoshop", "Google Chrome"],
+                answer: 0
+            }
+        ];
+
+        /* ==========================================================================
+           2. GLOBAL GAME STATE
+           ========================================================================== */
+        let currentPlayerName = "";
+        let cardsState = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moveCount = 0;
+        let isBoardLocked = false;
+        
+        let currentActiveQuestion = null;
+        let currentAttempt = 1; // 1 or 2
+        let totalScore = 0;
+        let playerScoresRecord = [];
+
+        /* ==========================================================================
+           3. INITIALIZATION & STORAGE
+           ========================================================================== */
+        window.onload = function() {
+            // Load saved scores from LocalStorage if any
+            const savedScores = localStorage.getItem('rbt_quiz_scores');
+            if (savedScores) {
+                try {
+                    playerScoresRecord = JSON.parse(savedScores);
+                } catch(e) { playerScoresRecord = []; }
+            }
+        };
+
+        /* ==========================================================================
+           4. GAME CONTROL FUNCTIONS
+           ========================================================================== */
+        function startGame(e) {
+            e.preventDefault();
+            const inputName = document.getElementById('playerName').value.trim();
+            if (!inputName) return;
+
+            currentPlayerName = inputName;
+            document.getElementById('headerPlayerName').innerText = currentPlayerName;
+            document.getElementById('userInfoHeader').classList.remove('hidden');
+
+            document.getElementById('viewLanding').classList.add('hidden');
+            document.getElementById('viewResults').classList.add('hidden');
+            document.getElementById('viewGame').classList.remove('hidden');
+
+            resetCurrentGame();
+        }
+
+        function resetCurrentGame() {
+            matchedPairs = 0;
+            moveCount = 0;
+            totalScore = 0;
+            flippedCards = [];
+            isBoardLocked = false;
+
+            document.getElementById('statMoves').innerText = '0';
+            document.getElementById('statMatched').innerText = '0 / 15';
+
+            setupGameBoard();
+        }
+
+        function restartFullGame() {
+            document.getElementById('viewResults').classList.add('hidden');
+            document.getElementById('viewGame').classList.remove('hidden');
+            resetCurrentGame();
+        }
+
+        function setupGameBoard() {
+            const grid = document.getElementById('gridBoard');
+            grid.innerHTML = '';
+
+            // Duplicate 15 question items to make 30 cards (15 pairs)
+            let cardDeck = [];
+            QUESTION_DATABASE.forEach(q => {
+                cardDeck.push({ qId: q.id, icon: q.icon, topic: q.topic, color: q.color });
+                cardDeck.push({ qId: q.id, icon: q.icon, topic: q.topic, color: q.color });
+            });
+
+            // Shuffle Deck
+            cardDeck.sort(() => Math.random() - 0.5);
+
+            cardsState = cardDeck.map((item, index) => ({
+                id: index,
+                qId: item.qId,
+                icon: item.icon,
+                topic: item.topic,
+                color: item.color,
+                isFlipped: false,
+                isMatched: false
+            }));
+
+            // Render cards in HTML
+            cardsState.forEach(card => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'h-24 md:h-28 cursor-pointer select-none';
+                cardEl.onclick = () => handleCardClick(card.id);
+
+                cardEl.innerHTML = `
+                    <div id="card-inner-${card.id}" class="w-full h-full transform-style-3d relative rounded-2xl shadow-md transition-transform">
+                        <!-- Front Face (Hidden / Back of card) -->
+                        <div class="absolute inset-0 bg-gradient-to-br from-pastelDarkPurple to-purple-800 rounded-2xl flex flex-col items-center justify-center text-white border-2 border-purple-300 backface-hidden">
+                            <i class="fa-solid fa-puzzle-piece text-2xl md:text-3xl opacity-80"></i>
+                            <span class="text-[10px] font-bold mt-1 text-purple-200">RBT # ${card.id + 1}</span>
+                        </div>
+                        <!-- Back Face (Revealed Icon) -->
+                        <div class="absolute inset-0 bg-white rounded-2xl flex flex-col items-center justify-center p-2 text-center border-2 border-purple-300 rotate-y-180 backface-hidden">
+                            <i class="fa-solid ${card.icon} ${card.color} text-2xl md:text-3xl mb-1"></i>
+                            <span class="text-[9px] md:text-[10px] font-bold text-gray-700 line-clamp-1">${card.topic}</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(cardEl);
+            });
+        }
+
+        function handleCardClick(cardId) {
+            if (isBoardLocked) return;
+            const card = cardsState[cardId];
+
+            // Ignore if already flipped or matched
+            if (card.isFlipped || card.isMatched) return;
+
+            // Flip Card
+            card.isFlipped = true;
+            document.getElementById(`card-inner-${card.id}`).classList.add('rotate-y-180');
+            flippedCards.push(card);
+
+            if (flippedCards.length === 2) {
+                moveCount++;
+                document.getElementById('statMoves').innerText = moveCount;
+                checkCardMatch();
+            }
+        }
+
+        function checkCardMatch() {
+            isBoardLocked = true;
+            const [card1, card2] = flippedCards;
+
+            if (card1.qId === card2.qId) {
+                // MATCH FOUND!
+                card1.isMatched = true;
+                card2.isMatched = true;
+                matchedPairs++;
+                document.getElementById('statMatched').innerText = `${matchedPairs} / 15`;
+
+                // Highlight matched cards visually
+                setTimeout(() => {
+                    document.getElementById(`card-inner-${card1.id}`).classList.add('ring-4', 'ring-emerald-400');
+                    document.getElementById(`card-inner-${card2.id}`).classList.add('ring-4', 'ring-emerald-400');
+                    
+                    // Trigger Quiz Question for this matched pair!
+                    openQuestionModal(card1.qId);
+                    flippedCards = [];
+                }, 400);
+
+            } else {
+                // NOT MATCHED - Flip back after delay
+                setTimeout(() => {
+                    card1.isFlipped = false;
+                    card2.isFlipped = false;
+                    document.getElementById(`card-inner-${card1.id}`).classList.remove('rotate-y-180');
+                    document.getElementById(`card-inner-${card2.id}`).classList.remove('rotate-y-180');
+                    flippedCards = [];
+                    isBoardLocked = false;
+                }, 1000);
+            }
+        }
+
+        function openQuestionModal(questionId) {
+            currentActiveQuestion = QUESTION_DATABASE.find(q => q.id === questionId);
+            currentAttempt = 1;
+
+            // Update Header Info
+            document.getElementById('modalQuestionNum').innerText = currentActiveQuestion.id;
+            document.getElementById('modalBadgeFormat').innerText = currentActiveQuestion.formatLabel;
+            document.getElementById('modalTopicTitle').innerText = currentActiveQuestion.topic;
+            document.getElementById('modalQuestionText').innerText = currentActiveQuestion.question;
+
+            // Update Icon
+            const iconContainer = document.getElementById('modalImageContainer');
+            iconContainer.innerHTML = `<i class="fa-solid ${currentActiveQuestion.icon} ${currentActiveQuestion.color}"></i>`;
+
+            updateAttemptBadge();
+            document.getElementById('modalFeedback').classList.add('hidden');
+
+            // Render Options depending on Question Format
+            renderQuestionBody();
+
+            // Display Modal
+            document.getElementById('modalQuestion').classList.remove('hidden');
+        }
+
+        function updateAttemptBadge() {
+            const badge = document.getElementById('modalAttemptBadge');
+            if (currentAttempt === 1) {
+                badge.className = "px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full";
+                badge.innerText = "Percubaan #1 (2 Markah)";
+            } else {
+                badge.className = "px-2.5 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded-full";
+                badge.innerText = "Peluang Kedua #2 (1 Markah)";
+            }
+        }
+
+        function renderQuestionBody() {
+            const body = document.getElementById('modalQuestionBody');
+            const submitContainer = document.getElementById('modalSubmitContainer');
+            body.innerHTML = '';
+            submitContainer.classList.add('hidden');
+
+            const q = currentActiveQuestion;
+
+            if (q.format === 'mcq' || q.format === 'tf') {
+                // FORMAT 1 & 2: Clickable buttons for 4 choices or True/False
+                q.options.forEach((optText, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.onclick = () => evaluateAnswer(idx);
+                    btn.className = `w-full text-left p-4 rounded-2xl border-2 border-purple-100 bg-purple-50/50 hover:bg-purple-100/80 hover:border-pastelDarkPurple transition-all font-bold text-gray-800 flex items-center justify-between text-sm md:text-base group`;
+                    
+                    const label = q.format === 'tf' ? (idx === 0 ? 'A. BETUL' : 'B. SALAH') : `${String.fromCharCode(65 + idx)}. ${optText}`;
+                    btn.innerHTML = `
+                        <span>${label}</span>
+                        <i class="fa-regular fa-circle text-purple-300 group-hover:text-pastelDarkPurple"></i>
+                    `;
+                    body.appendChild(btn);
+                });
+
+            } else if (q.format === 'match') {
+                // FORMAT 3: Match Item to Options
+                submitContainer.classList.remove('hidden');
+                
+                const matchBox = document.createElement('div');
+                matchBox.className = "bg-purple-50 p-4 rounded-2xl border border-purple-200 mb-3";
+                matchBox.innerHTML = `
+                    <p class="text-xs font-bold text-purple-600 uppercase mb-1">Item yang perlu dipadankan:</p>
+                    <div class="text-lg font-bold text-purple-900 bg-white p-3 rounded-xl border border-purple-100 shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-link text-pastelDarkPurple"></i>
+                        <span>${q.matchLeft}</span>
+                    </div>
+                `;
+                body.appendChild(matchBox);
+
+                const selectTitle = document.createElement('p');
+                selectTitle.className = "text-sm font-bold text-gray-700 mb-2";
+                selectTitle.innerText = "Pilih Padanan Pasangan Yang Betul:";
+                body.appendChild(selectTitle);
+
+                q.matchOptions.forEach((optText, idx) => {
+                    const label = document.createElement('label');
+                    label.className = "flex items-center p-3 border-2 border-purple-100 bg-white rounded-xl cursor-pointer hover:bg-purple-50 transition-all font-semibold text-sm";
+                    label.innerHTML = `
+                        <input type="radio" name="matchRadio" value="${idx}" class="w-4 h-4 text-pastelDarkPurple focus:ring-pastelDarkPurple mr-3">
+                        <span>${optText}</span>
+                    `;
+                    body.appendChild(label);
+                });
+
+            } else if (q.format === 'fill') {
+                // FORMAT 4: Complete sentence fill concept
+                submitContainer.classList.remove('hidden');
+
+                const selectTitle = document.createElement('p');
+                selectTitle.className = "text-sm font-bold text-gray-700 mb-2";
+                selectTitle.innerText = "Pilih kata / konsep jawapan yang paling tepat:";
+                body.appendChild(selectTitle);
+
+                q.fillOptions.forEach((optText, idx) => {
+                    const label = document.createElement('label');
+                    label.className = "flex items-center p-3 border-2 border-purple-100 bg-white rounded-xl cursor-pointer hover:bg-purple-50 transition-all font-semibold text-sm";
+                    label.innerHTML = `
+                        <input type="radio" name="fillRadio" value="${idx}" class="w-4 h-4 text-pastelDarkPurple focus:ring-pastelDarkPurple mr-3">
+                        <span>${optText}</span>
+                    `;
+                    body.appendChild(label);
+                });
+            }
+        }
+
+        function submitCustomAnswer() {
+            const q = currentActiveQuestion;
+            let selectedIdx = -1;
+
+            if (q.format === 'match') {
+                const checked = document.querySelector('input[name="matchRadio"]:checked');
+                if (checked) selectedIdx = parseInt(checked.value);
+            } else if (q.format === 'fill') {
+                const checked = document.querySelector('input[name="fillRadio"]:checked');
+                if (checked) selectedIdx = parseInt(checked.value);
+            }
+
+            if (selectedIdx === -1) {
+                alert("Sila pilih satu jawapan sebelum menghantar.");
+                return;
+            }
+
+            evaluateAnswer(selectedIdx);
+        }
+
+        function evaluateAnswer(selectedIndex) {
+            const q = currentActiveQuestion;
+            const isCorrect = (selectedIndex === q.answer);
+
+            if (isCorrect) {
+                // Correct Answer!
+                const pointsEarned = (currentAttempt === 1) ? 2 : 1;
+                totalScore += pointsEarned;
+
+                closeQuestionModal();
+
+                // Unlock grid board
+                isBoardLocked = false;
+
+                // Check if all 15 questions completed
+                if (matchedPairs === 15) {
+                    setTimeout(() => finishGame(), 500);
+                }
+
+            } else {
+                // Wrong Answer!
+                if (currentAttempt === 1) {
+                    // Give Second Chance
+                    currentAttempt = 2;
+                    updateAttemptBadge();
+
+                    const feedback = document.getElementById('modalFeedback');
+                    document.getElementById('modalFeedbackText').innerText = "Jawapan kurang tepat! Sila cuba sekali lagi (Peluang terakhir: 1 markah).";
+                    feedback.classList.remove('hidden');
+
+                } else {
+                    // Failed Second Attempt - 0 Points, Move on without revealing answer
+                    closeQuestionModal();
+                    isBoardLocked = false;
+
+                    if (matchedPairs === 15) {
+                        setTimeout(() => finishGame(), 500);
+                    }
+                }
+            }
+        }
+
+        function closeQuestionModal() {
+            document.getElementById('modalQuestion').classList.add('hidden');
+        }
+
+        function finishGame() {
+            document.getElementById('viewGame').classList.add('hidden');
+            document.getElementById('viewResults').classList.remove('hidden');
+
+            document.getElementById('resultPlayerName').innerText = currentPlayerName;
+            document.getElementById('resultScore').innerText = totalScore;
+
+            // Save result to records
+            const newRecord = {
+                name: currentPlayerName,
+                score: totalScore,
+                date: new Date().toLocaleDateString('ms-MY', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            };
+
+            playerScoresRecord.push(newRecord);
+            // Sort highest score first
+            playerScoresRecord.sort((a, b) => b.score - a.score);
+
+            localStorage.setItem('rbt_quiz_scores', JSON.stringify(playerScoresRecord));
+        }
+
+        function showDashboardModal() {
+            renderDashboardTable();
+            document.getElementById('modalDashboard').classList.remove('hidden');
+        }
+
+        function closeDashboardModal() {
+            document.getElementById('modalDashboard').classList.add('hidden');
+        }
+
+        function renderDashboardTable() {
+            const tbody = document.getElementById('dashboardTableBody');
+            const emptyMsg = document.getElementById('dashboardEmptyMsg');
+            tbody.innerHTML = '';
+
+            if (playerScoresRecord.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+            emptyMsg.classList.add('hidden');
+
+            playerScoresRecord.forEach((rec, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = idx % 2 === 0 ? 'bg-white' : 'bg-purple-50/40';
+
+                let rankBadge = `${idx + 1}`;
+                if (idx === 0) rankBadge = '🥇';
+                else if (idx === 1) rankBadge = '🥈';
+                else if (idx === 2) rankBadge = '🥉';
+
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-purple-900">${rankBadge}</td>
+                    <td class="p-3 font-bold text-gray-800">${escapeHtml(rec.name)}</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2.5 py-1 bg-red-100 text-red-700 font-bold rounded-lg text-xs">
+                            ${rec.score} / 30
+                        </span>
+                    </td>
+                    <td class="p-3 text-right text-xs text-gray-500 font-semibold">${rec.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clearScoreHistory() {
+            if (confirm("Adakah anda pasti untuk memadamkan semua rekod markah?")) {
+                playerScoresRecord = [];
+                localStorage.removeItem('rbt_quiz_scores');
+                renderDashboardTable();
+            }
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+    </script>
+</body>
+</html>

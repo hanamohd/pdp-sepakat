@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kuiz PACMAN: Teknologi Pertanian RBT Tahun 6</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background-color: #0d0f1d;
+            color: #ffffff;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-arcade {
+            font-family: 'Press Start 2P', cursive;
+        }
+        /* Grid styling */
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(25, 1fr);
+            grid-template-rows: repeat(25, 1fr);
+            aspect-ratio: 1 / 1;
+            background-color: #000000;
+            border: 4px solid #2563eb;
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.6);
+            touch-action: none;
+        }
+        .cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .wall {
+            background-color: #1e40af;
+            border-radius: 2px;
+            box-shadow: inset 0 0 2px #3b82f6;
+        }
+        .cherry {
+            background-color: transparent;
+            position: relative;
+        }
+        .cherry::after {
+            content: "🍒";
+            font-size: clamp(10px, 2.5vw, 20px);
+            line-height: 1;
+        }
+        .pacman {
+            background-color: #facc15;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #facc15;
+            transition: all 0.05s linear;
+        }
+        .ghost {
+            border-radius: 50% 50% 0 0;
+            transition: all 0.05s linear;
+        }
+        .ghost-0 { background-color: #ef4444; box-shadow: 0 0 6px #ef4444; } /* Blinky */
+        .ghost-1 { background-color: #ec4899; box-shadow: 0 0 6px #ec4899; } /* Pinky */
+        .ghost-2 { background-color: #06b6d4; box-shadow: 0 0 6px #06b6d4; } /* Inky */
+        .ghost-3 { background-color: #f97316; box-shadow: 0 0 6px #f97316; } /* Clyde */
+
+        /* Modal Styles */
+        .modal-bg {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="w-full max-w-xl flex justify-between items-center bg-gray-900 border-2 border-yellow-400 rounded-xl p-3 mb-2 shadow-lg">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl sm:text-3xl">🟡</span>
+            <div>
+                <h1 class="text-base sm:text-lg font-bold text-yellow-400 leading-tight">TEKNOLOGI PERTANIAN</h1>
+                <p class="text-xs text-gray-300">RBT Tahun 6 (KSSR Semakan)</p>
+            </div>
+        </div>
+        <div id="hud-info" class="hidden text-right">
+            <div class="text-xs text-gray-400">Pemain: <span id="hud-name" class="text-white font-semibold"></span> (<span id="hud-class" class="text-yellow-300"></span>)</div>
+            <div class="text-xs sm:text-sm font-bold text-green-400">Ceri: <span id="hud-cherry">0</span>/15</div>
+        </div>
+    </header>
+
+    <!-- MUKA HADAPAN / START SCREEN -->
+    <div id="start-screen" class="w-full max-w-md bg-gray-800 border-4 border-blue-600 rounded-2xl p-6 shadow-2xl my-auto text-center">
+        <div class="text-5xl mb-3 animate-bounce">🟡 🍒 👻</div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-yellow-400 mb-2 font-arcade">PAC-MAN RBT</h2>
+        <p class="text-gray-300 mb-6 text-sm sm:text-base">Kumpul ceri dan jawab soalan sains pertanian!</p>
+
+        <form id="start-form" class="space-y-4 text-left">
+            <div>
+                <label class="block text-sm sm:text-base text-gray-300 font-semibold mb-1">Nama Murid:</label>
+                <input type="text" id="player-name" required placeholder="Masukkan nama anda..." 
+                    class="w-full bg-gray-700 border-2 border-gray-600 rounded-xl p-3 text-white text-base focus:outline-none focus:border-yellow-400">
+            </div>
+
+            <div>
+                <label class="block text-sm sm:text-base text-gray-300 font-semibold mb-1">Pilih Kelas:</label>
+                <select id="player-class" required class="w-full bg-gray-700 border-2 border-gray-600 rounded-xl p-3 text-white text-base focus:outline-none focus:border-yellow-400">
+                    <option value="6 SUKSES">6 SUKSES</option>
+                    <option value="6 SUPER">6 SUPER</option>
+                </select>
+            </div>
+
+            <button type="submit" 
+                class="w-full bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-xl py-3 rounded-xl shadow-lg transform active:scale-95 transition-all mt-4 border-b-4 border-yellow-600">
+                MULA MAIN 🚀
+            </button>
+        </form>
+    </div>
+
+    <!-- MAIN GAME CONTAINER -->
+    <div id="game-container" class="hidden w-full max-w-xl flex-col items-center">
+        <!-- Game Canvas Grid -->
+        <div id="game-board" class="w-full my-auto rounded-xl overflow-hidden"></div>
+
+        <!-- Touch Controls Helper for Mobile -->
+        <div class="w-full mt-3 grid grid-cols-3 gap-2 max-w-xs mx-auto sm:hidden">
+            <div></div>
+            <button id="btn-up" class="bg-gray-800 border-2 border-gray-600 active:bg-yellow-500 text-white font-bold py-3 rounded-xl text-xl shadow">⬆️</button>
+            <div></div>
+            <button id="btn-left" class="bg-gray-800 border-2 border-gray-600 active:bg-yellow-500 text-white font-bold py-3 rounded-xl text-xl shadow">⬅️</button>
+            <button id="btn-down" class="bg-gray-800 border-2 border-gray-600 active:bg-yellow-500 text-white font-bold py-3 rounded-xl text-xl shadow">⬇️</button>
+            <button id="btn-right" class="bg-gray-800 border-2 border-gray-600 active:bg-yellow-500 text-white font-bold py-3 rounded-xl text-xl shadow">➡️</button>
+        </div>
+        <p class="text-xs text-gray-400 text-center mt-2">Gunakan **Leret / Swap Jari**, kekunci anak panah, atau butang di atas untuk menggerakkan Pacman.</p>
+    </div>
+
+    <!-- MODAL SOALAN (QUESTION MODAL) -->
+    <div id="quiz-modal" class="hidden fixed inset-0 modal-bg flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 border-4 border-yellow-400 rounded-2xl p-5 sm:p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+            
+            <div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2">
+                <span id="question-number-badge" class="bg-yellow-400 text-gray-900 font-bold text-xs sm:text-sm px-3 py-1 rounded-full">Soalan 1 / 15</span>
+                <span id="try-badge" class="text-xs sm:text-sm bg-blue-600 text-white px-2 py-1 rounded">Percubaan Pertama (2 Markah)</span>
+            </div>
+
+            <h3 id="question-text" class="text-base sm:text-lg font-bold text-white mb-4 leading-snug">
+                <!-- Soalan dipaparkan di sini -->
+            </h3>
+
+            <!-- Dynamic Question Container -->
+            <div id="question-content" class="space-y-3">
+                <!-- Pilihan Jawapan / Interaksi -->
+            </div>
+
+            <div id="feedback-message" class="hidden mt-4 p-3 rounded-xl text-center font-bold text-base"></div>
+        </div>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="result-screen" class="hidden fixed inset-0 modal-bg flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 border-4 border-green-400 rounded-2xl p-6 w-full max-w-md text-center shadow-2xl">
+            <div class="text-6xl mb-3">🏆</div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-yellow-400 mb-2">TAHNIAH!</h2>
+            <p class="text-gray-300 text-base mb-4">Anda telah berjaya menamatkan kuiz!</p>
+
+            <div class="bg-gray-900 border border-gray-700 rounded-xl p-4 mb-6 space-y-2 text-left">
+                <div class="text-gray-300">Nama: <span id="res-name" class="text-white font-bold"></span></div>
+                <div class="text-gray-300">Kelas: <span id="res-class" class="text-yellow-300 font-bold"></span></div>
+                <hr class="border-gray-800 my-2">
+                <div class="text-base text-gray-200">Markah Akhir:</div>
+                <div id="res-score" class="text-4xl font-extrabold text-green-400 text-center py-2">0 / 30</div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-lg py-3 rounded-xl shadow-lg border-b-4 border-yellow-600">
+                Main Semula 🔄
+            </button>
+        </div>
+    </div>
+
+    <footer class="w-full text-center text-xs text-gray-500 py-1">
+        RBT Tahun 6 - Pendidikan Khas Friendly
+    </footer>
+
+    <script>
+        // --- DATA SOALAN RBT TAHUN 6 (TEKNOLOGI PERTANIAN) ---
+        const questionsData = [
+            // BENTUK 1: Soalan Pilihan Berganda 4 Pilihan (Soalan 1 - 5)
+            {
+                id: 1,
+                type: "mcq",
+                question: "Apakah maksud kaedah penanaman Hidroponik?",
+                options: [
+                    "Penanaman menggunakan tanah liat",
+                    "Penanaman menggunakan air sebagai medium",
+                    "Penanaman di atas batu pasir",
+                    "Penanaman menggunakan racun kimia"
+                ],
+                correct: 1
+            },
+            {
+                id: 2,
+                type: "mcq",
+                question: "Manakah antara berikut MERUPAKAN alatan yang digunakan dalam hidroponik takung?",
+                options: [
+                    "Cangkul dan penyiram",
+                    "Takung, penutup takung, dan raga tanaman",
+                    "Pasu tanah liat dan sudip tangan",
+                    "Bajak dan jentera penanam"
+                ],
+                correct: 1
+            },
+            {
+                id: 3,
+                type: "mcq",
+                question: "Apakah fungsi medium 'span' dalam penyemaian biji benih hidroponik?",
+                options: [
+                    "Memberi warna kepada pokok",
+                    "Menyerap dan memegang kelembapan air untuk biji benih",
+                    "Membunuh serangga perosak",
+                    "Menghalang akar daripada tumbuh"
+                ],
+                correct: 1
+            },
+            {
+                id: 4,
+                type: "mcq",
+                question: "Larutan apakah yang membekalkan zat makanan lengkap kepada tanaman hidroponik?",
+                options: [
+                    "Larutan Gula dan Garam",
+                    "Larutan Stok A dan Stok B",
+                    "Larutan Asid dan Alkali",
+                    "Minyak Masak"
+                ],
+                correct: 1
+            },
+            {
+                id: 5,
+                type: "mcq",
+                question: "Antara sayuran berikut, yang manakah sesuai ditanam menggunakan kaedah hidroponik?",
+                options: [
+                    "Pokok Kelapa",
+                    "Sawi dan Bayam",
+                    "Pokok Durian",
+                    "Ubi Kayu"
+                ],
+                correct: 1
+            },
+
+            // BENTUK 2: Soalan Betul / Salah (Soalan 6 - 10)
+            {
+                id: 6,
+                type: "tf",
+                question: "Pernyataan: Kaedah hidroponik tidak memerlukan kawasan tanah yang luas.",
+                options: ["BETUL", "SALAH"],
+                correct: 0
+            },
+            {
+                id: 7,
+                type: "tf",
+                question: "Pernyataan: Biji benih perlu direndam dalam minyak sebelum disemai pada span.",
+                options: ["BETUL", "SALAH"],
+                correct: 1
+            },
+            {
+                id: 8,
+                type: "tf",
+                question: "Pernyataan: Larutan stok A dan stok B perlu digoncang sebelum digunakan.",
+                options: ["BETUL", "SALAH"],
+                correct: 0
+            },
+            {
+                id: 9,
+                type: "tf",
+                question: "Pernyataan: Biji benih yang bercambah dan mempunyai 2 hingga 3 helai daun dipanggil anak benih.",
+                options: ["BETUL", "SALAH"],
+                correct: 0
+            },
+            {
+                id: 10,
+                type: "tf",
+                question: "Pernyataan: Hasil tanaman hidroponik tidak boleh dijual untuk mendapat pendapatan.",
+                options: ["BETUL", "SALAH"],
+                correct: 1
+            },
+
+            // BENTUK 3: Soalan Padankan / Klasifikasi (Soalan 11 - 15)
+            {
+                id: 11,
+                type: "match",
+                question: "Padankan kaedah tuai yang betul bagi sayuran 'Cili':",
+                options: ["Memetik", "Mencabut", "Memotong", "Mengetuk"],
+                correct: 0
+            },
+            {
+                id: 12,
+                type: "match",
+                question: "Padankan kaedah tuai yang betul bagi sayuran berdaun seperti 'Sawi':",
+                options: ["Mencabut / Memotong", "Memetik buah", "Memanjat pokok", "Menggali tanah"],
+                correct: 0
+            },
+            {
+                id: 13,
+                type: "match",
+                question: "Pilih alatan yang betul untuk menyukat larutan stok A & B:",
+                options: ["Alat Penyukat / Silinder Penyukat", "Pembaris", "Penimbang Berat", "Jam Saat"],
+                correct: 0
+            },
+            {
+                id: 14,
+                type: "match",
+                question: "Apakah langkah penjagaan hidroponik untuk mengelakkan mendapan nutrien?",
+                options: ["Mengacau larutan seminggu sekali", "Biarkan tanpa dikacau", "Jemur di bawah matahari panas", "Tambah air paip setiap hari"],
+                correct: 0
+            },
+            {
+                id: 15,
+                type: "match",
+                question: "Mengapakah kerja menuai dilakukan pada awal pagi atau lewat petang?",
+                options: ["Mengekalkan kesegaran tanaman", "Membuat pokok layu", "Sebab malam gelap", "Supaya pokok cepat mati"],
+                correct: 0
+            }
+        ];
+
+        // --- GAME CONFIG & VARIABLES ---
+        const GRID_SIZE = 25;
+        let map = []; // Array (0: empty/path, 1: wall, 2: cherry)
+        let player = { x: 1, y: 1, dirX: 0, dirY: 0, nextDirX: 0, nextDirY: 0 };
+        let ghosts = [
+            { x: 12, y: 11, dirX: 0, dirY: -1 },
+            { x: 12, y: 12, dirX: 1, dirY: 0 },
+            { x: 11, y: 12, dirX: -1, dirY: 0 },
+            { x: 13, y: 12, dirX: 0, dirY: 1 }
+        ];
+
+        let cherriesEaten = 0;
+        let totalScore = 0;
+        let playerName = "";
+        let playerClass = "";
+        let currentQuestionIndex = 0;
+        let questionAttempt = 1; // 1 for 1st attempt (2 marks), 2 for 2nd attempt (1 mark)
+        let isGamePaused = false;
+        let gameLoopInterval = null;
+
+        // DOM Elements
+        const boardEl = document.getElementById('game-board');
+        const startScreen = document.getElementById('start-screen');
+        const gameContainer = document.getElementById('game-container');
+        const quizModal = document.getElementById('quiz-modal');
+        const resultScreen = document.getElementById('result-screen');
+
+        function generateMap() {
+            map = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
+
+            // Outer Walls
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    if (r === 0 || r === GRID_SIZE - 1 || c === 0 || c === GRID_SIZE - 1) {
+                        map[r][c] = 1; // Wall
+                    }
+                }
+            }
+
+            // Create Grid Barriers (Symmetric block maze)
+            for (let r = 2; r < GRID_SIZE - 2; r += 2) {
+                for (let c = 2; c < GRID_SIZE - 2; c += 2) {
+                    if (Math.random() < 0.6) {
+                        map[r][c] = 1;
+                        if (r + 1 < GRID_SIZE - 1 && Math.random() < 0.3) map[r + 1][c] = 1;
+                        if (c + 1 < GRID_SIZE - 1 && Math.random() < 0.3) map[r][c + 1] = 1;
+                    }
+                }
+            }
+
+            // Clear ghost spawning house in center & open wide escape routes
+            for (let r = 10; r <= 14; r++) {
+                for (let c = 10; c <= 14; c++) {
+                    map[r][c] = 0;
+                }
+            }
+            // Clear exit pathways from ghost area
+            for (let r = 6; r <= 10; r++) map[r][12] = 0;
+            for (let c = 6; c <= 18; c++) map[12][c] = 0;
+
+            // Clear starting area for Player
+            map[1][1] = 0; map[1][2] = 0; map[2][1] = 0;
+
+            // Place cherries on reachable paths
+            placeCherries();
+        }
+
+        function getReachableCells() {
+            let visited = Array(GRID_SIZE).fill(false).map(() => Array(GRID_SIZE).fill(false));
+            let queue = [{ r: 1, c: 1 }];
+            visited[1][1] = true;
+            let reachable = [];
+
+            while (queue.length > 0) {
+                let curr = queue.shift();
+                reachable.push(curr);
+
+                let dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                for (let [dr, dc] of dirs) {
+                    let nr = curr.r + dr;
+                    let nc = curr.c + dc;
+                    if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+                        if (map[nr][nc] !== 1 && !visited[nr][nc]) {
+                            visited[nr][nc] = true;
+                            queue.push({ r: nr, c: nc });
+                        }
+                    }
+                }
+            }
+            return reachable;
+        }
+
+        function placeCherries() {
+            let reachable = getReachableCells();
+            // Exclude start position and ghost room
+            reachable = reachable.filter(pos => 
+                !(pos.r <= 2 && pos.c <= 2) && 
+                !(pos.r >= 9 && pos.r <= 15 && pos.c >= 9 && pos.c <= 15)
+            );
+
+            // Shuffle reachable cells
+            reachable.sort(() => Math.random() - 0.5);
+
+            // Place exactly 15 cherries
+            for (let i = 0; i < 15 && i < reachable.length; i++) {
+                let cell = reachable[i];
+                map[cell.r][cell.c] = 2; // 2 = Cherry
+            }
+        }
+
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.id = `cell-${r}-${c}`;
+                    cell.className = 'cell';
+
+                    if (map[r][c] === 1) {
+                        cell.classList.add('wall');
+                    } else if (map[r][c] === 2) {
+                        cell.classList.add('cherry');
+                    }
+                    boardEl.appendChild(cell);
+                }
+            }
+            renderEntities();
+        }
+
+        function renderEntities() {
+            // Remove previous positions
+            document.querySelectorAll('.pacman, .ghost').forEach(el => {
+                el.classList.remove('pacman', 'ghost', 'ghost-0', 'ghost-1', 'ghost-2', 'ghost-3');
+            });
+
+            // Render Player
+            const playerCell = document.getElementById(`cell-${player.y}-${player.x}`);
+            if (playerCell) playerCell.classList.add('pacman');
+
+            // Render Ghosts
+            ghosts.forEach((g, idx) => {
+                const ghostCell = document.getElementById(`cell-${g.y}-${g.x}`);
+                if (ghostCell) {
+                    ghostCell.classList.add('ghost', `ghost-${idx}`);
+                }
+            });
+        }
+
+        function updateGame() {
+            if (isGamePaused) return;
+
+            // Attempt to change player direction
+            if (player.nextDirX !== 0 || player.nextDirY !== 0) {
+                let nextX = player.x + player.nextDirX;
+                let nextY = player.y + player.nextDirY;
+                if (map[nextY] && map[nextY][nextX] !== 1) {
+                    player.dirX = player.nextDirX;
+                    player.dirY = player.nextDirY;
+                }
+            }
+
+            // Move Player
+            let newX = player.x + player.dirX;
+            let newY = player.y + player.dirY;
+
+            if (map[newY] && map[newY][newX] !== 1) {
+                player.x = newX;
+                player.y = newY;
+
+                // Eat Cherry
+                if (map[player.y][player.x] === 2) {
+                    map[player.y][player.x] = 0; // Clear cherry
+                    cherriesEaten++;
+                    document.getElementById('hud-cherry').innerText = cherriesEaten;
+                    const cell = document.getElementById(`cell-${player.y}-${player.x}`);
+                    if (cell) cell.classList.remove('cherry');
+
+                    // Pause game and trigger quiz popup
+                    triggerQuiz();
+                    return;
+                }
+            }
+
+            // Move Ghosts (Chasing & Exploring AI)
+            ghosts.forEach(g => {
+                let validDirs = [];
+                let dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]]; // UP, DOWN, LEFT, RIGHT
+
+                dirs.forEach(([dx, dy]) => {
+                    let testX = g.x + dx;
+                    let testY = g.y + dy;
+                    if (map[testY] && map[testY][testX] !== 1) {
+                        let dist = Math.abs(testX - player.x) + Math.abs(testY - player.y);
+                        validDirs.push({ dx, dy, dist });
+                    }
+                });
+
+                if (validDirs.length > 0) {
+                    // 60% chance to head towards Pacman, 40% random roam
+                    if (Math.random() < 0.60) {
+                        validDirs.sort((a, b) => a.dist - b.dist);
+                    } else {
+                        validDirs.sort(() => Math.random() - 0.5);
+                    }
+
+                    // Avoid immediate reverse direction if alternatives exist
+                    let chosenDir = validDirs[0];
+                    if (validDirs.length > 1 && chosenDir.dx === -g.dirX && chosenDir.dy === -g.dirY) {
+                        chosenDir = validDirs[1];
+                    }
+
+                    g.dirX = chosenDir.dx;
+                    g.dirY = chosenDir.dy;
+                    g.x += g.dirX;
+                    g.y += g.dirY;
+                }
+
+                // Ghost Collision (Friendly Reset back to safe start spot)
+                if (g.x === player.x && g.y === player.y) {
+                    player.x = 1;
+                    player.y = 1;
+                    player.dirX = 0;
+                    player.dirY = 0;
+                }
+            });
+
+            renderEntities();
+        }
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        boardEl.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        boardEl.addEventListener('touchend', e => {
+            let touchEndX = e.changedTouches[0].clientX;
+            let touchEndY = e.changedTouches[0].clientY;
+
+            let diffX = touchEndX - touchStartX;
+            let diffY = touchEndY - touchStartY;
+
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX > 20) setDirection(1, 0);  // RIGHT
+                else if (diffX < -20) setDirection(-1, 0); // LEFT
+            } else {
+                if (diffY > 20) setDirection(0, 1);  // DOWN
+                else if (diffY < -20) setDirection(0, -1); // UP
+            }
+        }, { passive: true });
+
+        // Onscreen Control Buttons
+        document.getElementById('btn-up').onclick = () => setDirection(0, -1);
+        document.getElementById('btn-down').onclick = () => setDirection(0, 1);
+        document.getElementById('btn-left').onclick = () => setDirection(-1, 0);
+        document.getElementById('btn-right').onclick = () => setDirection(1, 0);
+
+        // Keyboard Controls
+        window.addEventListener('keydown', e => {
+            if (["ArrowUp", "KeyW"].includes(e.code)) setDirection(0, -1);
+            if (["ArrowDown", "KeyS"].includes(e.code)) setDirection(0, 1);
+            if (["ArrowLeft", "KeyA"].includes(e.code)) setDirection(-1, 0);
+            if (["ArrowRight", "KeyD"].includes(e.code)) setDirection(1, 0);
+        });
+
+        function setDirection(dx, dy) {
+            player.nextDirX = dx;
+            player.nextDirY = dy;
+        }
+
+        function triggerQuiz() {
+            isGamePaused = true;
+            questionAttempt = 1;
+
+            const qData = questionsData[currentQuestionIndex];
+            document.getElementById('question-number-badge').innerText = `Soalan ${currentQuestionIndex + 1} / 15`;
+            document.getElementById('try-badge').innerText = "Percubaan Pertama (2 Markah)";
+            document.getElementById('try-badge').className = "text-xs sm:text-sm bg-blue-600 text-white px-2 py-1 rounded";
+            document.getElementById('question-text').innerText = qData.question;
+
+            const contentEl = document.getElementById('question-content');
+            const feedbackEl = document.getElementById('feedback-message');
+
+            feedbackEl.className = "hidden mt-4 p-3 rounded-xl text-center font-bold text-base";
+            contentEl.innerHTML = '';
+
+            // Render Answers Options
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full bg-gray-700 hover:bg-yellow-500 hover:text-gray-900 text-white text-left text-sm sm:text-base font-semibold p-3 sm:p-4 rounded-xl border-2 border-gray-600 transition duration-150 flex items-center space-x-3";
+                btn.innerHTML = `<span class="bg-gray-800 text-yellow-400 font-bold px-3 py-1 rounded-lg text-xs sm:text-sm">${String.fromCharCode(65 + idx)}</span> <span>${opt}</span>`;
+                btn.onclick = () => handleAnswerSelect(idx);
+                contentEl.appendChild(btn);
+            });
+
+            quizModal.classList.remove('hidden');
+        }
+
+        function handleAnswerSelect(selectedIndex) {
+            const qData = questionsData[currentQuestionIndex];
+            const feedbackEl = document.getElementById('feedback-message');
+            const tryBadge = document.getElementById('try-badge');
+
+            if (selectedIndex === qData.correct) {
+                // Correct Answer
+                let scoreEarned = (questionAttempt === 1) ? 2 : 1;
+                totalScore += scoreEarned;
+
+                feedbackEl.className = "mt-4 p-3 rounded-xl text-center font-bold text-base bg-green-600 text-white block";
+                feedbackEl.innerText = `🎉 TAHNIAH! Jawapan Betul! (+${scoreEarned} Markah)`;
+
+                document.querySelectorAll('#question-content button').forEach(btn => btn.disabled = true);
+
+                setTimeout(() => {
+                    quizModal.classList.add('hidden');
+                    currentQuestionIndex++;
+
+                    if (currentQuestionIndex >= 15 || cherriesEaten >= 15) {
+                        endGame();
+                    } else {
+                        isGamePaused = false;
+                    }
+                }, 1300);
+
+            } else {
+                // Incorrect Answer
+                if (questionAttempt === 1) {
+                    questionAttempt = 2;
+                    tryBadge.innerText = "Percubaan Kedua (1 Markah)";
+                    tryBadge.className = "text-xs sm:text-sm bg-orange-600 text-white px-2 py-1 rounded";
+
+                    feedbackEl.className = "mt-4 p-3 rounded-xl text-center font-bold text-base bg-red-600 text-white block animate-bounce";
+                    feedbackEl.innerText = "❌ Jawapan Kurang Tepat! Sila cuba sekali lagi.";
+
+                    const buttons = document.querySelectorAll('#question-content button');
+                    if (buttons[selectedIndex]) {
+                        buttons[selectedIndex].classList.add('opacity-40', 'line-through', 'bg-red-900');
+                        buttons[selectedIndex].disabled = true;
+                    }
+
+                } else {
+                    feedbackEl.className = "mt-4 p-3 rounded-xl text-center font-bold text-base bg-gray-600 text-white block";
+                    feedbackEl.innerText = "❌ Jawapan Masih Salah. Mari teruskan!";
+
+                    document.querySelectorAll('#question-content button').forEach(btn => btn.disabled = true);
+
+                    setTimeout(() => {
+                        quizModal.classList.add('hidden');
+                        currentQuestionIndex++;
+
+                        if (currentQuestionIndex >= 15 || cherriesEaten >= 15) {
+                            endGame();
+                        } else {
+                            isGamePaused = false;
+                        }
+                    }, 1300);
+                }
+            }
+        }
+
+        document.getElementById('start-form').onsubmit = (e) => {
+            e.preventDefault();
+            playerName = document.getElementById('player-name').value.trim();
+            playerClass = document.getElementById('player-class').value;
+
+            document.getElementById('hud-name').innerText = playerName;
+            document.getElementById('hud-class').innerText = playerClass;
+            document.getElementById('hud-info').classList.remove('hidden');
+
+            startScreen.classList.add('hidden');
+            gameContainer.classList.remove('hidden');
+            gameContainer.classList.add('flex');
+
+            generateMap();
+            renderBoard();
+
+            isGamePaused = false;
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+            gameLoopInterval = setInterval(updateGame, 220);
+        };
+
+        function endGame() {
+            isGamePaused = true;
+            if (gameLoopInterval) clearInterval(gameLoopInterval);
+
+            document.getElementById('res-name').innerText = playerName;
+            document.getElementById('res-class').innerText = playerClass;
+            document.getElementById('res-score').innerText = `${totalScore} / 30`;
+
+            resultScreen.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
