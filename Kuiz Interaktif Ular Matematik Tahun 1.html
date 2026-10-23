@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kuiz Ular Matematik Tahun 1 - Panjang, Jisim & Isi Padu Cecair</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka & Quicksand for kid-friendly text -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            orange: '#FF884D',
+                            lightOrange: '#FFE5D9',
+                            purple: '#8B5CF6',
+                            lightPurple: '#EDE9FE',
+                            bg: '#F7F5FF',
+                            accent: '#FFB84C'
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        quicksand: ['Quicksand', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background-color: #F7F5FF;
+            color: #332C54;
+            overflow-x: hidden;
+        }
+        /* Custom styling for canvas grid */
+        #gameCanvas {
+            background-color: #FAF8FF;
+            border: 4px solid #8B5CF6;
+            box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.25);
+            touch-action: none;
+        }
+        .btn-bounce {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+        /* Custom modal transition */
+        .modal-enter {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center bg-brand-bg text-slate-800 p-2 sm:p-4">
+
+    <!-- HEADER / APP BAR -->
+    <header class="w-full max-w-lg flex justify-between items-center py-2 px-4 bg-white rounded-2xl shadow-md border-2 border-purple-200 mb-2">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">🐍</span>
+            <h1 class="text-xl sm:text-2xl font-bold text-brand-purple">Ular Matematik</h1>
+        </div>
+        <div id="topScoreBoard" class="hidden flex items-center gap-2 bg-orange-100 text-brand-orange px-3 py-1 rounded-xl border border-orange-300 font-bold text-lg">
+            <span>⭐ Markah:</span>
+            <span id="currentScore">0</span>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="w-full max-w-lg flex-1 flex flex-col justify-center items-center relative">
+
+        <!-- 1. MUKA HADAPAN (START SCREEN) -->
+        <div id="startScreen" class="w-full bg-white rounded-3xl p-6 shadow-xl border-4 border-purple-300 flex flex-col items-center text-center space-y-5 my-auto">
+            <div class="relative">
+                <div class="w-24 h-24 bg-brand-lightOrange rounded-full flex items-center justify-center text-5xl mx-auto shadow-inner">
+                    🐍🍎
+                </div>
+            </div>
+            
+            <div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-brand-purple">Panjang, Jisim & Isi Padu Cecair</h2>
+                <p class="text-slate-500 font-medium mt-1 text-sm sm:text-base">Kumpulkan 15 makanan & jawab soalan matematik!</p>
+            </div>
+
+            <form id="startForm" onsubmit="startGame(event)" class="w-full space-y-4 text-left">
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1 text-lg">Nama Murid:</label>
+                    <input type="text" id="playerName" required placeholder="Masukkan nama anda" 
+                        class="w-full px-4 py-3 text-lg rounded-2xl border-2 border-purple-300 focus:outline-none focus:border-brand-purple bg-purple-50 font-bold text-brand-purple placeholder-purple-300">
+                </div>
+
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1 text-lg">Pilih Kelas:</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="playerClass" value="1 Sukses" checked class="peer hidden">
+                            <div class="py-3 text-center rounded-2xl border-2 border-slate-200 peer-checked:border-brand-purple peer-checked:bg-purple-100 peer-checked:text-brand-purple font-bold text-lg transition-all shadow-sm">
+                                🏫 1 Sukses
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="playerClass" value="1 Super" class="peer hidden">
+                            <div class="py-3 text-center rounded-2xl border-2 border-slate-200 peer-checked:border-brand-orange peer-checked:bg-orange-100 peer-checked:text-brand-orange font-bold text-lg transition-all shadow-sm">
+                                ⭐ 1 Super
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-bounce w-full bg-brand-orange hover:bg-orange-600 text-white font-extrabold text-2xl py-4 rounded-2xl shadow-lg border-b-4 border-orange-700 flex items-center justify-center gap-2 mt-2">
+                    <span>MULA MAIN</span> 🚀
+                </button>
+            </form>
+        </div>
+
+        <!-- 2. RUANGAN GAME (SNAKE CANVAS & TOUCH CONTROLS) -->
+        <div id="gameScreen" class="hidden w-full flex-col items-center">
+            
+            <!-- Progress Status Bar -->
+            <div class="w-full flex justify-between items-center mb-2 px-2 text-sm font-bold text-slate-600">
+                <span id="foodProgress">🍎 Makanan: 0 / 15</span>
+                <span id="gameSpeedText" class="text-purple-600">🏃 Kelajuan: Santai</span>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full flex justify-center items-center">
+                <canvas id="gameCanvas" width="360" height="360" class="rounded-2xl max-w-full aspect-square"></canvas>
+            </div>
+
+            <!-- Touch Controls (For Smartphones & Tablets) -->
+            <div class="w-full max-w-xs mt-3 flex flex-col items-center gap-1 sm:hidden">
+                <button onclick="changeDirection('UP')" class="btn-bounce bg-purple-500 active:bg-purple-700 text-white w-14 h-12 rounded-xl text-2xl shadow-md flex items-center justify-center border-b-4 border-purple-700">
+                    <i class="fa-solid fa-arrow-up"></i>
+                </button>
+                <div class="flex justify-between w-full px-4">
+                    <button onclick="changeDirection('LEFT')" class="btn-bounce bg-purple-500 active:bg-purple-700 text-white w-14 h-12 rounded-xl text-2xl shadow-md flex items-center justify-center border-b-4 border-purple-700">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <button onclick="changeDirection('RIGHT')" class="btn-bounce bg-purple-500 active:bg-purple-700 text-white w-14 h-12 rounded-xl text-2xl shadow-md flex items-center justify-center border-b-4 border-purple-700">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+                <button onclick="changeDirection('DOWN')" class="btn-bounce bg-purple-500 active:bg-purple-700 text-white w-14 h-12 rounded-xl text-2xl shadow-md flex items-center justify-center border-b-4 border-purple-700">
+                    <i class="fa-solid fa-arrow-down"></i>
+                </button>
+            </div>
+            
+            <p class="hidden sm:block text-xs text-slate-400 font-bold mt-2">Gunakan Kekunci Anak Panah ⬅️ ⬆️ ⬇️ ➡️ Pada Papan Kekunci</p>
+        </div>
+
+        <!-- 3. MODAL SOALAN (QUESTION POPUP) -->
+        <div id="questionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+            <div class="modal-enter bg-white w-full max-w-md rounded-3xl p-4 sm:p-5 shadow-2xl border-4 border-purple-400 flex flex-col justify-between max-h-[92vh] overflow-y-auto">
+                
+                <!-- Modal Header -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span id="questionLevelBadge" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold border border-purple-300">
+                            Aras
+                        </span>
+                        <div class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-bold border border-orange-300">
+                            Percubaan: <span id="attemptText">1 daripada 2</span>
+                        </div>
+                    </div>
+
+                    <!-- Image / Illustration Container -->
+                    <div id="questionImage" class="w-full h-32 sm:h-36 bg-purple-50 rounded-2xl flex items-center justify-center p-2 mb-3 border-2 border-dashed border-purple-200">
+                        <!-- SVG graphic dynamically injected -->
+                    </div>
+
+                    <!-- Question Text -->
+                    <h3 id="questionText" class="text-lg sm:text-xl font-bold text-slate-800 mb-3 text-center leading-snug">
+                        Soalan akan dipaparkan di sini...
+                    </h3>
+                </div>
+
+                <!-- Answer Options / Input Field -->
+                <div id="answerArea" class="w-full my-2">
+                    <!-- Dynamic Answer Components (MCQ, True/False, Fill in Blank) -->
+                </div>
+
+                <!-- Feedback Message -->
+                <div id="feedbackMessage" class="hidden my-2 p-2 rounded-xl text-center font-bold text-sm"></div>
+
+                <!-- Submit Button -->
+                <button id="btnSubmitAnswer" onclick="submitAnswer()" class="btn-bounce w-full bg-brand-purple hover:bg-purple-700 text-white font-extrabold text-lg py-3 rounded-2xl shadow-lg border-b-4 border-purple-900 mt-2">
+                    HANTAR JAWAPAN ✨
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. PAPARAN AKHIR (RESULT SCREEN) -->
+        <div id="resultScreen" class="hidden w-full flex justify-center items-center py-4">
+            <!-- Square Final Box -->
+            <div class="w-80 h-80 sm:w-96 sm:h-96 bg-white rounded-3xl border-8 border-brand-purple shadow-2xl p-6 flex flex-col justify-between items-center text-center relative overflow-hidden">
+                
+                <!-- Decorative background elements -->
+                <div class="absolute -top-10 -right-10 w-28 h-28 bg-purple-100 rounded-full z-0"></div>
+                <div class="absolute -bottom-10 -left-10 w-28 h-28 bg-orange-100 rounded-full z-0"></div>
+
+                <div class="relative z-10 w-full">
+                    <span class="text-4xl">🏆</span>
+                    <h2 class="text-xl sm:text-2xl font-black text-brand-purple mt-1 uppercase tracking-wide">KEPUTUSAN KUIZ</h2>
+                    <div class="w-16 h-1 bg-brand-orange mx-auto my-1 rounded-full"></div>
+                </div>
+
+                <!-- Student Info & Marks Card -->
+                <div class="relative z-10 bg-purple-50 w-full py-3 px-4 rounded-2xl border-2 border-purple-200 space-y-1">
+                    <div class="text-base text-slate-600 font-bold">Nama: <span id="resName" class="text-purple-700 font-extrabold text-lg">---</span></div>
+                    <div class="text-base text-slate-600 font-bold">Kelas: <span id="resClass" class="text-orange-600 font-extrabold text-lg">---</span></div>
+                    <div class="mt-2 text-xs font-bold text-slate-400 uppercase">Jumlah Markah</div>
+                    <div class="text-3xl sm:text-4xl font-black text-brand-orange">
+                        <span id="resScore">0</span> <span class="text-lg font-bold text-slate-500">/ 30</span>
+                    </div>
+                </div>
+
+                <!-- Restart Game Button -->
+                <button onclick="resetGame()" class="relative z-10 btn-bounce bg-brand-orange hover:bg-orange-600 text-white font-bold text-lg py-2 px-6 rounded-xl shadow-md border-b-4 border-orange-700 w-full">
+                    MAIN SEMULA 🔄
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="text-center text-xs text-purple-400 font-bold py-2">
+        Matematik Tahun 1 SK • Ular Classic Interaktif
+    </footer>
+
+    <!-- GAME LOGIC SCRIPT -->
+    <script>
+        /* --- GAME CONFIG & STATE --- */
+        const GRID_SIZE = 20; // 20x20 Grid
+        let canvas, ctx;
+        let tileCount = 20;
+        let tileSize = 18; // Adjusted dynamically
+
+        // Snake parameters
+        let snake = [];
+        let dx = 1, dy = 0;
+        let food = { x: 5, y: 5 };
+        let gameInterval = null;
+        const SNAKE_SPEED = 240; // Slow speed suitable for Year 1 pupils
+
+        // Player & Quiz state
+        let player = { name: '', class: '', score: 0 };
+        let foodEatenCount = 0;
+        const TOTAL_FOOD = 15;
+        let currentQuestionIndex = 0;
+        let currentAttempt = 1;
+        let userSelectedAnswer = null;
+
+        /* --- QUESTION BANK (15 Questions: Rendah, Sederhana, Tinggi) --- */
+        const questionBank = [
+            // Aras Rendah (1-5)
+            {
+                id: 1,
+                level: "Aras Rendah",
+                type: "mcq",
+                text: "Antara dua pokok ini, yang manakah TINGGI?",
+                image: `<svg width="180" height="100" viewBox="0 0 200 120">
+                    <!-- Tree A (Tinggi) -->
+                    <rect x="35" y="40" width="10" height="60" fill="#8B5A2B"/>
+                    <circle cx="40" cy="35" r="25" fill="#4CAF50"/>
+                    <text x="33" y="115" font-weight="bold" font-size="14" fill="#333">A</text>
+                    <!-- Tree B (Rendah) -->
+                    <rect x="135" y="70" width="10" height="30" fill="#8B5A2B"/>
+                    <circle cx="140" cy="65" r="15" fill="#8BC34A"/>
+                    <text x="133" y="115" font-weight="bold" font-size="14" fill="#333">B</text>
+                </svg>`,
+                options: ["Pokok A", "Pokok B"],
+                answer: "Pokok A"
+            },
+            {
+                id: 2,
+                level: "Aras Rendah",
+                type: "true_false",
+                text: "Gajah adalah lebih RINGAN daripada burung kecil.",
+                image: `<svg width="180" height="100" viewBox="0 0 200 120">
+                    <text x="30" y="60" font-size="40">🐘</text>
+                    <text x="120" y="60" font-size="30">🐦</text>
+                    <text x="75" y="65" font-weight="bold" font-size="16" fill="#8B5CF6">VS</text>
+                </svg>`,
+                options: ["Betul", "Salah"],
+                answer: "Salah"
+            },
+            {
+                id: 3,
+                level: "Aras Rendah",
+                type: "mcq",
+                text: "Bekas manakah yang mengandungi cecair PALING BANYAK?",
+                image: `<svg width="200" height="100" viewBox="0 0 200 120">
+                    <!-- Cawan A (Sikit) -->
+                    <rect x="20" y="50" width="30" height="40" rx="3" fill="#E2E8F0" stroke="#94A3B8" stroke-width="2"/>
+                    <rect x="22" y="75" width="26" height="13" fill="#38BDF8"/>
+                    <text x="30" y="105" font-weight="bold" font-size="12">A</text>
+                    <!-- Cawan B (Penuh) -->
+                    <rect x="85" y="50" width="30" height="40" rx="3" fill="#E2E8F0" stroke="#94A3B8" stroke-width="2"/>
+                    <rect x="87" y="53" width="26" height="35" fill="#38BDF8"/>
+                    <text x="95" y="105" font-weight="bold" font-size="12">B</text>
+                    <!-- Cawan C (Separuh) -->
+                    <rect x="150" y="50" width="30" height="40" rx="3" fill="#E2E8F0" stroke="#94A3B8" stroke-width="2"/>
+                    <rect x="152" y="68" width="26" height="20" fill="#38BDF8"/>
+                    <text x="160" y="105" font-weight="bold" font-size="12">C</text>
+                </svg>`,
+                options: ["Bekas A", "Bekas B", "Bekas C"],
+                answer: "Bekas B"
+            },
+            {
+                id: 4,
+                level: "Aras Rendah",
+                type: "mcq",
+                text: "Pembaris ini adalah lebih __________ daripada pensel.",
+                image: `<svg width="200" height="90" viewBox="0 0 200 90">
+                    <!-- Pembaris -->
+                    <rect x="20" y="20" width="160" height="20" fill="#FCD34D" stroke="#F59E0B" stroke-width="2" rx="2"/>
+                    <!-- Pensel -->
+                    <rect x="20" y="55" width="90" height="15" fill="#F43F5E" rx="2"/>
+                    <polygon points="110,55 125,62.5 110,70" fill="#FFEDD5"/>
+                </svg>`,
+                options: ["panjang", "pendek"],
+                answer: "panjang"
+            },
+            {
+                id: 5,
+                level: "Aras Rendah",
+                type: "fill_blank",
+                text: "Isi padu air dalam cawan adalah ________ (penuh / sedikit).",
+                image: `<svg width="120" height="100" viewBox="0 0 120 100">
+                    <rect x="40" y="20" width="40" height="60" rx="5" fill="#E2E8F0" stroke="#64748B" stroke-width="3"/>
+                    <rect x="43" y="23" width="34" height="54" rx="3" fill="#0EA5E9"/>
+                </svg>`,
+                options: ["penuh", "sedikit"],
+                answer: "penuh"
+            },
+
+            // Aras Sederhana (6-10)
+            {
+                id: 6,
+                level: "Aras Sederhana",
+                type: "mcq",
+                text: "Panjang klip kertas sama dengan 3 petak. Berapakah panjang pemadam?",
+                image: `<svg width="220" height="100" viewBox="0 0 220 100">
+                    <!-- Grid Unit -->
+                    <g stroke="#CBD5E1" stroke-width="1" fill="none">
+                        <rect x="20" y="20" width="30" height="30"/>
+                        <rect x="50" y="20" width="30" height="30"/>
+                        <rect x="80" y="20" width="30" height="30"/>
+                        <rect x="110" y="20" width="30" height="30"/>
+                        <rect x="140" y="20" width="30" height="30"/>
+                    </g>
+                    <!-- Pemadam (4 petak) -->
+                    <rect x="20" y="60" width="120" height="25" fill="#A855F7" rx="4"/>
+                    <text x="65" y="77" fill="#FFF" font-weight="bold" font-size="12">PEMADAM</text>
+                </svg>`,
+                options: ["3 unit", "4 unit", "5 unit"],
+                answer: "4 unit"
+            },
+            {
+                id: 7,
+                level: "Aras Sederhana",
+                type: "mcq",
+                text: "Jisim buku merah sama dengan berapa biji guli?",
+                image: `<svg width="220" height="100" viewBox="0 0 220 100">
+                    <!-- Penimbang -->
+                    <path d="M 30 70 L 190 70 M 110 70 L 110 90 M 90 90 L 130 90" stroke="#475569" stroke-width="4"/>
+                    <!-- Buku (Kiri) -->
+                    <rect x="35" y="45" width="50" height="20" fill="#EF4444" rx="2"/>
+                    <!-- 5 Guli (Kanan) -->
+                    <circle cx="135" cy="60" r="7" fill="#3B82F6"/>
+                    <circle cx="150" cy="60" r="7" fill="#3B82F6"/>
+                    <circle cx="165" cy="60" r="7" fill="#3B82F6"/>
+                    <circle cx="142" cy="48" r="7" fill="#3B82F6"/>
+                    <circle cx="157" cy="48" r="7" fill="#3B82F6"/>
+                </svg>`,
+                options: ["3 biji", "4 biji", "5 biji"],
+                answer: "5 biji"
+            },
+            {
+                id: 8,
+                level: "Aras Sederhana",
+                type: "true_false",
+                text: "Isi padu Botol A adalah SAMA BANYAK dengan Botol B.",
+                image: `<svg width="200" height="100" viewBox="0 0 200 100">
+                    <!-- Botol A (2 gelas) -->
+                    <rect x="30" y="20" width="30" height="50" rx="4" fill="#38BDF8"/>
+                    <text x="35" y="85" font-weight="bold" font-size="11">Botol A (2 cawan)</text>
+                    <!-- Botol B (2 gelas) -->
+                    <rect x="130" y="20" width="30" height="50" rx="4" fill="#38BDF8"/>
+                    <text x="135" y="85" font-weight="bold" font-size="11">Botol B (2 cawan)</text>
+                </svg>`,
+                options: ["Betul", "Salah"],
+                answer: "Betul"
+            },
+            {
+                id: 9,
+                level: "Aras Sederhana",
+                type: "mcq",
+                text: "Lengkapkan: Jisim sebotol kicap adalah lebih _______ daripada jisim sekotak tisu.",
+                image: `<svg width="200" height="100" viewBox="0 0 200 100">
+                    <text x="40" y="60" font-size="35">🍾</text>
+                    <text x="130" y="60" font-size="35">🧻</text>
+                    <text x="35" y="85" font-weight="bold" font-size="12" fill="#64748B">BERAT</text>
+                    <text x="130" y="85" font-weight="bold" font-size="12" fill="#64748B">RINGAN</text>
+                </svg>`,
+                options: ["berat", "ringan"],
+                answer: "berat"
+            },
+            {
+                id: 10,
+                level: "Aras Sederhana",
+                type: "fill_blank",
+                text: "Tinggi blok A sama dengan _____ unit kubus.",
+                image: `<svg width="160" height="100" viewBox="0 0 160 100">
+                    <!-- Stack of 3 cubes -->
+                    <rect x="60" y="65" width="25" height="25" fill="#F59E0B" stroke="#FFF" stroke-width="2"/>
+                    <rect x="60" y="40" width="25" height="25" fill="#F59E0B" stroke="#FFF" stroke-width="2"/>
+                    <rect x="60" y="15" width="25" height="25" fill="#F59E0B" stroke="#FFF" stroke-width="2"/>
+                </svg>`,
+                options: ["2", "3", "4"],
+                answer: "3"
+            },
+
+            // Aras Tinggi (11-15)
+            {
+                id: 11,
+                level: "Aras Tinggi",
+                type: "mcq",
+                text: "Kereta mainan A panjangnya 4 klip kertas. Kereta B panjangnya 6 klip kertas. Kereta manakah lebih PANJANG?",
+                image: `<svg width="220" height="90" viewBox="0 0 220 90">
+                    <text x="20" y="40" font-size="28">🏎️ A (4 unit)</text>
+                    <text x="20" y="75" font-size="28">C B (6 unit)</text>
+                </svg>`,
+                options: ["Kereta A", "Kereta B"],
+                answer: "Kereta B"
+            },
+            {
+                id: 12,
+                level: "Aras Tinggi",
+                type: "mcq",
+                text: "Tepung sama berat dengan 6 tin susu. Gula sama berat dengan 3 tin susu. Yang manakah LEBIH RINGAN?",
+                image: `<svg width="220" height="100" viewBox="0 0 220 100">
+                    <text x="30" y="50" font-size="30">🥡</text>
+                    <text x="25" y="75" font-weight="bold" font-size="12">Tepung (6 tin)</text>
+                    <text x="140" y="50" font-size="30">P</text>
+                    <text x="135" y="75" font-weight="bold" font-size="12">Gula (3 tin)</text>
+                </svg>`,
+                options: ["Tepung", "Gula"],
+                answer: "Gula"
+            },
+            {
+                id: 13,
+                level: "Aras Tinggi",
+                type: "mcq",
+                text: "Satu teko air boleh memenuhkan 5 cawan air. Berapakah cawan air yang diperlukan untuk 2 teko air?",
+                image: `<svg width="220" height="100" viewBox="0 0 220 100">
+                    <text x="20" y="55" font-size="35">🫖 = ☕☕☕☕☕</text>
+                    <text x="20" y="90" font-weight="bold" font-size="13" fill="#8B5CF6">🫖 + 🫖 = ?</text>
+                </svg>`,
+                options: ["8 cawan", "10 cawan", "12 cawan"],
+                answer: "10 cawan"
+            },
+            {
+                id: 14,
+                level: "Aras Tinggi",
+                type: "true_false",
+                text: "Panjang pensel A (5 klip) Boleh muat di dalam bekas pensel yang panjangnya 6 klip kertas.",
+                image: `<svg width="220" height="90" viewBox="0 0 220 90">
+                    <rect x="20" y="20" width="150" height="25" fill="#C084FC" rx="5"/>
+                    <text x="30" y="37" fill="#FFF" font-weight="bold" font-size="11">Bekas Pensel (6 unit)</text>
+                    <rect x="20" y="55" width="120" height="15" fill="#F43F5E" rx="3"/>
+                    <text x="30" y="67" fill="#FFF" font-weight="bold" font-size="10">Pensel (5 unit)</text>
+                </svg>`,
+                options: ["Betul", "Salah"],
+                answer: "Betul"
+            },
+            {
+                id: 15,
+                level: "Aras Tinggi",
+                type: "fill_blank",
+                text: "Jisim Beg A = 4 blok. Jisim Beg B = 2 blok. Jumlah jisim kedua-dua beg ialah _____ blok.",
+                image: `<svg width="220" height="90" viewBox="0 0 220 90">
+                    <text x="30" y="50" font-size="30">🎒</text>
+                    <text x="25" y="75" font-weight="bold" font-size="12">Beg A (4)</text>
+                    <text x="130" y="50" font-size="30">👝</text>
+                    <text x="125" y="75" font-weight="bold" font-size="12">Beg B (2)</text>
+                </svg>`,
+                options: ["5", "6", "8"],
+                answer: "6"
+            }
+        ];
+
+        /* --- INITIALIZATION & START GAME --- */
+        window.onload = function() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Listen for keyboard controls
+            document.addEventListener('keydown', handleKeyPress);
+        };
+
+        function resizeCanvas() {
+            const containerWidth = Math.min(window.innerWidth - 32, 360);
+            canvas.width = containerWidth;
+            canvas.height = containerWidth;
+            tileSize = canvas.width / GRID_SIZE;
+            if (snake.length > 0) drawGame();
+        }
+
+        function startGame(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('playerName').value.trim();
+            const classInput = document.querySelector('input[name="playerClass"]:checked').value;
+
+            if (!nameInput) return;
+
+            player.name = nameInput;
+            player.class = classInput;
+            player.score = 0;
+            foodEatenCount = 0;
+            currentQuestionIndex = 0;
+
+            document.getElementById('currentScore').innerText = player.score;
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('flex');
+            document.getElementById('topScoreBoard').classList.remove('hidden');
+
+            initSnake();
+        }
+
+        function initSnake() {
+            snake = [
+                { x: 10, y: 10 },
+                { x: 9, y: 10 },
+                { x: 8, y: 10 }
+            ];
+            dx = 1; dy = 0;
+            spawnFood();
+            updateProgress();
+
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(gameLoop, SNAKE_SPEED);
+        }
+
+        /* --- SNAKE ENGINE --- */
+        function gameLoop() {
+            moveSnake();
+            if (checkCollision()) {
+                // If collision with wall or self, reset snake position gently
+                snake = [
+                    { x: 10, y: 10 },
+                    { x: 9, y: 10 },
+                    { x: 8, y: 10 }
+                ];
+                dx = 1; dy = 0;
+            }
+
+            if (snake[0].x === food.x && snake[0].y === food.y) {
+                // Eaten food!
+                clearInterval(gameInterval);
+                triggerQuestion();
+            } else {
+                drawGame();
+            }
+        }
+
+        function moveSnake() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+            snake.pop();
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            // Wall collision
+            if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
+                return true;
+            }
+            // Self collision
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) return true;
+            }
+            return false;
+        }
+
+        function spawnFood() {
+            let valid = false;
+            while (!valid) {
+                food.x = Math.floor(Math.random() * GRID_SIZE);
+                food.y = Math.floor(Math.random() * GRID_SIZE);
+                valid = !snake.some(segment => segment.x === food.x && segment.y === food.y);
+            }
+        }
+
+        function drawGame() {
+            // Clear Background
+            ctx.fillStyle = '#FAF8FF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Grid Lines (Subtle)
+            ctx.strokeStyle = '#F1F0FE';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * tileSize, 0);
+                ctx.lineTo(i * tileSize, canvas.height);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, i * tileSize);
+                ctx.lineTo(canvas.width, i * tileSize);
+                ctx.stroke();
+            }
+
+            // Draw Food (Apple)
+            ctx.font = `${tileSize * 0.9}px Fredoka`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("🍎", food.x * tileSize + tileSize / 2, food.y * tileSize + tileSize / 2);
+
+            // Draw Snake
+            snake.forEach((segment, index) => {
+                if (index === 0) {
+                    // Head
+                    ctx.fillStyle = '#8B5CF6';
+                    ctx.beginPath();
+                    ctx.roundRect(
+                        segment.x * tileSize + 1, 
+                        segment.y * tileSize + 1, 
+                        tileSize - 2, 
+                        tileSize - 2, 
+                        6
+                    );
+                    ctx.fill();
+
+                    // Eyes
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.arc(segment.x * tileSize + tileSize/3, segment.y * tileSize + tileSize/3, 2, 0, Math.PI * 2);
+                    ctx.arc(segment.x * tileSize + (2*tileSize)/3, segment.y * tileSize + tileSize/3, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Body
+                    ctx.fillStyle = '#A78BFA';
+                    ctx.beginPath();
+                    ctx.roundRect(
+                        segment.x * tileSize + 2, 
+                        segment.y * tileSize + 2, 
+                        tileSize - 4, 
+                        tileSize - 4, 
+                        4
+                    );
+                    ctx.fill();
+                }
+            });
+        }
+
+        function handleKeyPress(e) {
+            if (['ArrowUp', 'KeyW'].includes(e.code) && dy !== 1) { dx = 0; dy = -1; }
+            else if (['ArrowDown', 'KeyS'].includes(e.code) && dy !== -1) { dx = 0; dy = 1; }
+            else if (['ArrowLeft', 'KeyA'].includes(e.code) && dx !== 1) { dx = -1; dy = 0; }
+            else if (['ArrowRight', 'KeyD'].includes(e.code) && dx !== -1) { dx = 1; dy = 0; }
+        }
+
+        function changeDirection(dir) {
+            if (dir === 'UP' && dy !== 1) { dx = 0; dy = -1; }
+            if (dir === 'DOWN' && dy !== -1) { dx = 0; dy = 1; }
+            if (dir === 'LEFT' && dx !== 1) { dx = -1; dy = 0; }
+            if (dir === 'RIGHT' && dx !== -1) { dx = 1; dy = 0; }
+        }
+
+        function updateProgress() {
+            document.getElementById('foodProgress').innerText = `🍎 Makanan: ${foodEatenCount} / ${TOTAL_FOOD}`;
+        }
+
+        /* --- QUESTION MODAL & LOGIC --- */
+        function triggerQuestion() {
+            currentAttempt = 1;
+            userSelectedAnswer = null;
+
+            const q = questionBank[currentQuestionIndex];
+            
+            // Render Question Details
+            document.getElementById('questionLevelBadge').innerText = q.level;
+            document.getElementById('questionText').innerText = q.text;
+            document.getElementById('questionImage').innerHTML = q.image;
+            document.getElementById('attemptText').innerText = `1 daripada 2`;
+
+            // Reset feedback message
+            const fb = document.getElementById('feedbackMessage');
+            fb.classList.add('hidden');
+            fb.className = "hidden my-2 p-2 rounded-xl text-center font-bold text-sm";
+
+            // Render Answer Component
+            const answerArea = document.getElementById('answerArea');
+            answerArea.innerHTML = '';
+
+            if (q.type === 'mcq' || q.type === 'true_false' || q.type === 'fill_blank') {
+                const gridDiv = document.createElement('div');
+                gridDiv.className = "grid grid-cols-1 gap-2 w-full";
+
+                q.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = "btn-bounce w-full py-3 px-4 rounded-xl border-2 border-purple-200 bg-purple-50 text-purple-900 font-bold text-base hover:bg-purple-100 flex items-center justify-between transition-all";
+                    btn.innerHTML = `<span>${opt}</span> <i class="fa-regular fa-circle text-purple-300 text-lg"></i>`;
+                    btn.onclick = () => selectOption(btn, opt);
+                    gridDiv.appendChild(btn);
+                });
+                answerArea.appendChild(gridDiv);
+            }
+
+            // Show Modal
+            document.getElementById('questionModal').classList.remove('hidden');
+        }
+
+        function selectOption(selectedBtn, value) {
+            userSelectedAnswer = value;
+            const buttons = document.querySelectorAll('#answerArea button');
+            buttons.forEach(btn => {
+                btn.className = "btn-bounce w-full py-3 px-4 rounded-xl border-2 border-purple-200 bg-purple-50 text-purple-900 font-bold text-base hover:bg-purple-100 flex items-center justify-between transition-all";
+                btn.querySelector('i').className = "fa-regular fa-circle text-purple-300 text-lg";
+            });
+
+            selectedBtn.className = "btn-bounce w-full py-3 px-4 rounded-xl border-2 border-brand-purple bg-purple-200 text-purple-900 font-extrabold text-base flex items-center justify-between shadow-sm";
+            selectedBtn.querySelector('i').className = "fa-solid fa-circle-check text-brand-purple text-lg";
+        }
+
+        function submitAnswer() {
+            if (!userSelectedAnswer) {
+                alert("Sila pilih jawapan terlebih dahulu!");
+                return;
+            }
+
+            const q = questionBank[currentQuestionIndex];
+            const isCorrect = (userSelectedAnswer.toString().trim().toLowerCase() === q.answer.toString().trim().toLowerCase());
+            const fb = document.getElementById('feedbackMessage');
+
+            if (isCorrect) {
+                // Calculate Marks: Try 1 = 2 marks, Try 2 = 1 mark
+                const points = (currentAttempt === 1) ? 2 : 1;
+                player.score += points;
+                document.getElementById('currentScore').innerText = player.score;
+
+                fb.innerText = `🎉 TAHNIAH! Jawapan Betul (+${points} Markah)`;
+                fb.className = "my-2 p-2 rounded-xl text-center font-bold text-sm bg-green-100 text-green-700 border border-green-300 block";
+
+                setTimeout(() => {
+                    closeQuestionModal(true);
+                }, 1200);
+
+            } else {
+                if (currentAttempt === 1) {
+                    currentAttempt = 2;
+                    document.getElementById('attemptText').innerText = `2 daripada 2`;
+                    fb.innerText = `❌ Jawapan Kurang Tepat. Cuba Sekali Lagi!`;
+                    fb.className = "my-2 p-2 rounded-xl text-center font-bold text-sm bg-amber-100 text-amber-700 border border-amber-300 block";
+                    userSelectedAnswer = null;
+                } else {
+                    // Failed both attempts
+                    fb.innerText = `😅 Jawapan yang betul ialah: ${q.answer}`;
+                    fb.className = "my-2 p-2 rounded-xl text-center font-bold text-sm bg-red-100 text-red-700 border border-red-300 block";
+
+                    setTimeout(() => {
+                        closeQuestionModal(false);
+                    }, 1800);
+                }
+            }
+        }
+
+        function closeQuestionModal(wasCorrect) {
+            document.getElementById('questionModal').classList.add('hidden');
+
+            foodEatenCount++;
+            updateProgress();
+
+            // Grow snake body
+            snake.push({ ...snake[snake.length - 1] });
+
+            currentQuestionIndex++;
+
+            if (foodEatenCount >= TOTAL_FOOD || currentQuestionIndex >= questionBank.length) {
+                endGame();
+            } else {
+                spawnFood();
+                gameInterval = setInterval(gameLoop, SNAKE_SPEED);
+            }
+        }
+
+        /* --- END GAME & FINAL RESULT --- */
+        function endGame() {
+            clearInterval(gameInterval);
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('flex');
+            
+            // Populate Final Square Card
+            document.getElementById('resName').innerText = player.name;
+            document.getElementById('resClass').innerText = player.class;
+            document.getElementById('resScore').innerText = player.score;
+
+            document.getElementById('resultScreen').classList.remove('hidden');
+        }
+
+        function resetGame() {
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('topScoreBoard').classList.add('hidden');
+            document.getElementById('playerName').value = '';
+        }
+    </script>
+</body>
+</html>
