@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuiz Matematik Cilik - Ukuran, Jisim & Isi Padu</title>
+  
+  <!-- Google Fonts: Fredoka & Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Tone.js for Audio Synth -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            fredoka: ['Fredoka', 'sans-serif'],
+            quicksand: ['Quicksand', 'sans-serif'],
+          },
+          colors: {
+            pastel: {
+              pink: '#FFB7B2',
+              red: '#FF6B6B',
+              yellow: '#FFE699',
+              green: '#C7CEEA',
+              mint: '#B5EAD7',
+              purple: '#E2F0CB',
+              violet: '#D6C7FF',
+              blue: '#A2E8DD'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Fredoka', sans-serif;
+      background-color: #FAF5FF;
+      background-image: radial-gradient(#E2F0CB 1.5px, transparent 1.5px), radial-gradient(#FFB7B2 1.5px, #FAF5FF 1.5px);
+      background-size: 60px 60px;
+      background-position: 0 0, 30px 30px;
+    }
+
+    .btn-bounce {
+      transition: all 0.2s ease;
+    }
+    .btn-bounce:hover {
+      transform: translateY(-4px) scale(1.02);
+    }
+    .btn-bounce:active {
+      transform: translateY(2px) scale(0.98);
+    }
+
+    .card-shadow {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Target cetakan sijil sahaja */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #certificate-view, #certificate-view * {
+        visibility: visible;
+      }
+      #certificate-view {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between selection:bg-pink-200">
+
+  <!-- Header / Navigation Bar -->
+  <header class="bg-white/80 backdrop-blur-md border-b-4 border-amber-300 sticky top-0 z-40 px-4 py-3 shadow-sm">
+    <div class="max-w-5xl mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="showScreen('registration-screen')">
+        <div class="bg-amber-400 p-2 rounded-2xl shadow-inner text-2xl">📐</div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold text-slate-800 leading-tight">Kuiz Matematik Cilik</h1>
+          <p class="text-xs text-amber-600 font-semibold font-quicksand hidden sm:block">Tajuk: Panjang, Jisim & Isi Padu (Tahun 1)</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <!-- Audio Toggle Button -->
+        <button id="audio-toggle-btn" onclick="toggleAudio()" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-full text-xl transition btn-bounce border border-slate-300">
+          🔊
+        </button>
+        <!-- Teacher Dashboard Button -->
+        <button onclick="promptTeacherPin()" class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold rounded-2xl text-sm transition btn-bounce shadow-md flex items-center space-x-1 border-b-4 border-indigo-700">
+          <span>👨‍🏫</span>
+          <span class="hidden sm:inline">Mod Guru</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-4xl w-full mx-auto p-4 flex-grow flex flex-col justify-center">
+
+    <!-- 1. REGISTRATION SCREEN -->
+    <div id="registration-screen" class="bg-white rounded-3xl p-6 md:p-10 card-shadow border-4 border-amber-200 text-center relative overflow-hidden my-4">
+      <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-200 rounded-full blur-2xl opacity-50"></div>
+      <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-pink-200 rounded-full blur-2xl opacity-50"></div>
+
+      <div class="inline-block bg-pink-100 text-pink-600 px-4 py-1.5 rounded-full text-sm font-bold mb-4 border border-pink-200">
+        🌟 Jom Belajar Matematik!
+      </div>
+
+      <h2 class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-2">Selamat Datang Cilik Genius!</h2>
+      <p class="text-slate-600 font-quicksand mb-8 max-w-md mx-auto">Sila masukkan nama dan pilih kelas anda sebelum memulakan kuiz cabaran Matematik ini.</p>
+
+      <form id="registration-form" onsubmit="startQuiz(event)" class="max-w-md mx-auto space-y-5 text-left">
+        <div>
+          <label class="block text-slate-700 font-bold mb-2 text-sm md:text-base">👤 Nama Murid:</label>
+          <input type="text" id="student-name" required placeholder="Contoh: Amir Hafiz" class="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-amber-400 focus:outline-none font-quicksand text-lg bg-slate-50 focus:bg-white transition">
+        </div>
+
+        <div>
+          <label class="block text-slate-700 font-bold mb-2 text-sm md:text-base">🏫 Pilih Kelas:</label>
+          <select id="student-class" required class="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-amber-400 focus:outline-none font-quicksand text-lg bg-slate-50 focus:bg-white transition">
+            <option value="1 Sukses">1 Sukses (15 Soalan Cabaran - Aras Rendah, Sederhana & KBAT)</option>
+            <option value="1 Super">1 Super (10 Soalan Asas)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="w-full py-4 bg-emerald-400 hover:bg-emerald-500 text-slate-900 font-extrabold text-xl rounded-2xl btn-bounce shadow-lg border-b-4 border-emerald-600 mt-4 transition">
+          🚀 Mula Kuiz Sekarang!
+        </button>
+      </form>
+    </div>
+
+    <!-- 2. QUIZ SCREEN -->
+    <div id="quiz-screen" class="hidden bg-white rounded-3xl p-6 md:p-8 card-shadow border-4 border-blue-200 my-4">
+      
+      <!-- Quiz Progress Header -->
+      <div class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+          <span id="question-tracker" class="text-sm md:text-base font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Soalan 1 / 10</span>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs bg-purple-100 text-purple-700 px-2.5 py-1 rounded-md font-bold" id="question-level">Aras Rendah</span>
+            <span class="text-base font-extrabold text-amber-500 bg-amber-50 px-3 py-1 rounded-full border border-amber-200" id="current-score-display">Markah: 0</span>
+          </div>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden p-0.5 border border-slate-200">
+          <div id="quiz-progress-bar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Question Box -->
+      <div class="bg-slate-50 rounded-2xl p-4 md:p-6 border-2 border-slate-100 mb-6 text-center">
+        <!-- Visual SVG Container -->
+        <div id="question-visual" class="flex justify-center items-center my-4 h-44 bg-white rounded-xl p-3 border border-slate-200 shadow-inner overflow-hidden">
+          <!-- SVG injected dynamically -->
+        </div>
+
+        <h3 id="question-text" class="text-xl md:text-2xl font-bold text-slate-800 mt-2">
+          <!-- Text Dynamic -->
+        </h3>
+      </div>
+
+      <!-- Hint Banner -->
+      <div id="hint-box" class="hidden mb-4 bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-amber-800 text-sm md:text-base font-quicksand flex items-start space-x-3">
+        <span class="text-2xl">💡</span>
+        <div>
+          <span class="font-bold">Petunjuk (Percubaan Ke-2):</span>
+          <span id="hint-text">...</span>
+        </div>
+      </div>
+
+      <!-- Interactive Answer Area -->
+      <div id="answer-options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Options rendered dynamically -->
+      </div>
+
+      <!-- Feedback Banner (Correct/Wrong Message) -->
+      <div id="feedback-modal" class="hidden mt-6 p-4 rounded-2xl text-center font-bold text-lg"></div>
+
+    </div>
+
+    <!-- 3. CERTIFICATE / RESULT SCREEN -->
+    <div id="result-screen" class="hidden my-4">
+      <div id="certificate-view" class="bg-white rounded-3xl p-6 md:p-10 border-8 border-amber-300 card-shadow relative overflow-hidden text-center">
+        <!-- Certificate Ornamental Design -->
+        <div class="border-4 border-dashed border-amber-200 p-6 md:p-8 rounded-2xl relative">
+          
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-4xl">🎓</span>
+            <span class="text-xs font-bold text-slate-400 tracking-widest uppercase">KSSR MATEMATIK TAHUN 1</span>
+            <span class="text-4xl">⭐</span>
+          </div>
+
+          <h2 class="text-3xl md:text-4xl font-extrabold text-amber-600 tracking-wide uppercase mb-1">SIJIL PENCAPAIAN</h2>
+          <p class="text-slate-500 font-quicksand text-sm mb-6">Dengan ini diperakui bahawa</p>
+
+          <h3 id="cert-student-name" class="text-2xl md:text-3xl font-black text-slate-800 border-b-2 border-slate-300 inline-block px-6 py-1 mb-2 text-indigo-600">
+            - Nama Murid -
+          </h3>
+          <p class="text-slate-600 text-base font-bold font-quicksand mb-6">
+            dari Kelas <span id="cert-student-class" class="text-slate-900">1 Sukses</span>
+          </p>
+
+          <p class="text-slate-600 font-quicksand max-w-md mx-auto text-sm md:text-base mb-6">
+            Telah berjaya menyempurnakan Kuiz Interaktif Topik Ukuran Panjang, Jisim dan Isi Padu Cecair dengan keputusan berikut:
+          </p>
+
+          <!-- Score & Grade Badges -->
+          <div class="grid grid-cols-2 gap-4 max-w-xs mx-auto mb-6">
+            <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3">
+              <span class="block text-xs text-amber-600 font-bold uppercase">Jumlah Markah</span>
+              <span id="cert-score" class="text-2xl md:text-3xl font-black text-amber-600">0 / 0</span>
+            </div>
+            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3">
+              <span class="block text-xs text-emerald-600 font-bold uppercase">Tahap Penguasaan</span>
+              <span id="cert-grade" class="text-2xl md:text-3xl font-black text-emerald-600">TP3</span>
+            </div>
+          </div>
+
+          <p id="cert-eval-text" class="text-sm font-quicksand font-bold text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 max-w-md mx-auto mb-6">
+            Tahniah! Anda menunjukkan kefahaman yang sangat baik.
+          </p>
+
+          <div class="flex justify-between items-end mt-8 text-left text-xs text-slate-400 font-quicksand border-t pt-4">
+            <div>
+              <p>Tarikh: <span id="cert-date">-</span></p>
+              <p>ID Sijil: <span id="cert-id" class="font-mono">-</span></p>
+            </div>
+            <div class="text-right">
+              <div class="w-24 border-b border-slate-400 mb-1"></div>
+              <p class="font-bold text-slate-600">Tandatangan Guru</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons (No Print) -->
+      <div class="no-print mt-6 flex flex-wrap justify-center gap-4">
+        <button onclick="window.print()" class="px-6 py-3.5 bg-blue-500 hover:bg-blue-600 text-white font-extrabold text-base rounded-2xl btn-bounce shadow-md border-b-4 border-blue-700 flex items-center space-x-2">
+          <span>🖨️</span>
+          <span>Cetak / Simpan Sijil (PDF)</span>
+        </button>
+        <button onclick="showScreen('registration-screen')" class="px-6 py-3.5 bg-slate-600 hover:bg-slate-700 text-white font-extrabold text-base rounded-2xl btn-bounce shadow-md border-b-4 border-slate-800 flex items-center space-x-2">
+          <span>🔄</span>
+          <span>Cuba Lagi</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. TEACHER DASHBOARD SCREEN -->
+    <div id="teacher-dashboard" class="hidden bg-white rounded-3xl p-6 md:p-8 card-shadow border-4 border-indigo-200 my-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b">
+        <div>
+          <h2 class="text-2xl md:text-3xl font-black text-slate-800 flex items-center gap-2">
+            <span>👨‍🏫</span> Papan Pemuka Guru
+          </h2>
+          <p class="text-slate-500 text-sm font-quicksand">Analisis Prestasi Murid secara Real-Time (Firestore)</p>
+        </div>
+        <button onclick="showScreen('registration-screen')" class="mt-3 md:mt-0 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-sm transition btn-bounce">
+          ⬅️ Ke Halaman Utama
+        </button>
+      </div>
+
+      <!-- Summary Stat Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-indigo-50 border-2 border-indigo-200 p-4 rounded-2xl text-center">
+          <span class="block text-xs font-bold text-indigo-600 uppercase">Jumlah Responden</span>
+          <span id="stat-total-students" class="text-3xl font-black text-indigo-700">0</span>
+        </div>
+        <div class="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl text-center">
+          <span class="block text-xs font-bold text-amber-600 uppercase">Purata Markah</span>
+          <span id="stat-avg-score" class="text-3xl font-black text-amber-700">0.0</span>
+        </div>
+        <div class="bg-emerald-50 border-2 border-emerald-200 p-4 rounded-2xl text-center">
+          <span class="block text-xs font-bold text-emerald-600 uppercase">Peratus Kelulusan (≥TP4)</span>
+          <span id="stat-pass-rate" class="text-3xl font-black text-emerald-700">0%</span>
+        </div>
+      </div>
+
+      <!-- Search & Filter Controls -->
+      <div class="flex flex-col sm:flex-row gap-3 mb-6">
+        <input type="text" id="dashboard-search" oninput="renderTeacherTable()" placeholder="🔍 Cari nama murid..." class="flex-grow px-4 py-2.5 rounded-xl border-2 border-slate-200 font-quicksand text-sm focus:outline-none focus:border-indigo-400">
+        <select id="dashboard-filter-class" onchange="renderTeacherTable()" class="px-4 py-2.5 rounded-xl border-2 border-slate-200 font-quicksand text-sm focus:outline-none focus:border-indigo-400 bg-white">
+          <option value="ALL">Semua Kelas</option>
+          <option value="1 Sukses">1 Sukses</option>
+          <option value="1 Super">1 Super</option>
+        </select>
+      </div>
+
+      <!-- Results Table -->
+      <div class="overflow-x-auto rounded-2xl border border-slate-200">
+        <table class="w-full text-left font-quicksand text-sm">
+          <thead class="bg-slate-100 text-slate-700 font-bold uppercase text-xs">
+            <tr>
+              <th class="p-3.5">Nama Murid</th>
+              <th class="p-3.5">Kelas</th>
+              <th class="p-3.5">Markah</th>
+              <th class="p-3.5">Tahap (TP)</th>
+              <th class="p-3.5">Tarikh / Masa</th>
+              <th class="p-3.5 text-center">Tindakan</th>
+            </tr>
+          </thead>
+          <tbody id="teacher-results-tbody" class="divide-y divide-slate-200 bg-white">
+            <tr>
+              <td colspan="6" class="p-4 text-center text-slate-400">Memuatkan data rekod...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- CUSTOM MODAL (FOR PIN PROMPT & NOTIFICATIONS) -->
+  <div id="custom-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full card-shadow border-4 border-indigo-200 text-center animate-bounce-short">
+      <h3 id="modal-title" class="text-xl font-bold text-slate-800 mb-2">🔒 Pengesahan Guru</h3>
+      <p id="modal-msg" class="text-slate-600 text-sm font-quicksand mb-4">Sila masukkan PIN Guru (Lalai: 1234):</p>
+      
+      <div id="modal-input-container" class="mb-4">
+        <input type="password" id="teacher-pin-input" maxlength="6" class="w-full text-center px-4 py-3 border-2 border-slate-300 rounded-2xl text-2xl tracking-widest font-bold focus:outline-none focus:border-indigo-500">
+      </div>
+
+      <div class="flex justify-center space-x-3">
+        <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-sm btn-bounce">Batal</button>
+        <button id="modal-confirm-btn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm btn-bounce shadow">Sahkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 text-xs font-quicksand text-slate-500 border-t border-slate-200/60 bg-white/40">
+    📐 Kuiz Interaktif Matematik KSSR Tahun 1 • Ukuran, Jisim & Isi Padu Cecair
+  </footer>
+
+  <!-- Firebase Integration Script -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Firebase Config Global Initialization
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'math-year1-quiz';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: "demo-api-key",
+      authDomain: "demo-app.firebaseapp.com",
+      projectId: "demo-app",
+      storageBucket: "demo-app.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    window.allQuizResults = []; // Cache results globally
+
+    // Authenticate automatically
+    async function initAuth() {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          const userCred = await signInWithCustomToken(auth, __initial_auth_token);
+          currentUser = userCred.user;
+        } else {
+          const userCred = await signInAnonymously(auth);
+          currentUser = userCred.user;
+        }
+        setupRealtimeListener();
+      } catch (e) {
+        console.warn("Firestore Auth fallback setup:", e);
+      }
+    }
+    initAuth();
+
+    // Firestore Path for Quiz Results
+    const getQuizCollection = () => collection(db, 'artifacts', appId, 'public', 'data', 'quiz_results');
+
+    // Save Quiz Result
+    window.saveQuizResultToFirestore = async function(resultData) {
+      if (!currentUser) return;
+      try {
+        await addDoc(getQuizCollection(), {
+          ...resultData,
+          submittedAt: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error("Error saving result:", err);
+      }
+    };
+
+    // Realtime Listener for Teacher Dashboard
+    function setupRealtimeListener() {
+      if (!currentUser) return;
+      onSnapshot(getQuizCollection(), (snapshot) => {
+        window.allQuizResults = [];
+        snapshot.forEach((docSnap) => {
+          window.allQuizResults.push({
+            id: docSnap.id,
+            ...docSnap.data()
+          });
+        });
+        if (typeof window.renderTeacherTable === 'function') {
+          window.renderTeacherTable();
+        }
+      }, (error) => {
+        console.error("Firestore snapshot error:", error);
+      });
+    }
+
+    // Delete Record Function
+    window.deleteQuizRecord = async function(docId) {
+      if (!currentUser) return;
+      try {
+        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quiz_results', docId));
+      } catch (err) {
+        console.error("Error deleting record:", err);
+      }
+    };
+  </script>
+
+  <!-- Application Logic & Tone.js Audio Script -->
+  <script>
+    /* ----------------------------------------------------
+       AUDIO SYSTEM (Tone.js Synth)
+       ---------------------------------------------------- */
+    let isMuted = false;
+    let synth, polySynth;
+
+    function initAudio() {
+      if (!synth) {
+        synth = new Tone.Synth().toDestination();
+        polySynth = new Tone.PolySynth().toDestination();
+        Tone.start();
+      }
+    }
+
+    function toggleAudio() {
+      isMuted = !isMuted;
+      const btn = document.getElementById('audio-toggle-btn');
+      btn.textContent = isMuted ? '🔇' : '🔊';
+    }
+
+    function playSound(type) {
+      if (isMuted) return;
+      initAudio();
+
+      try {
+        const now = Tone.now();
+        if (type === 'click') {
+          synth.triggerAttackRelease('C5', '8n', now);
+        } else if (type === 'correct') {
+          polySynth.triggerAttackRelease(['C5', 'E5', 'G5'], '8n', now);
+        } else if (type === 'wrong') {
+          synth.triggerAttackRelease('F3', '8n', now);
+        } else if (type === 'win') {
+          polySynth.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '4n', now);
+        }
+      } catch (e) {
+        console.log('Audio playback prevented or unsupported');
+      }
+    }
+
+    /* ----------------------------------------------------
+       QUESTION BANK (Berdasarkan Dokumen Matematik Tahun 1)
+       ---------------------------------------------------- */
+    const ALL_QUESTIONS = [
+      // ARAS RENDAH (10 Soalan)
+      {
+        id: 1,
+        level: 'Aras Rendah',
+        text: 'Antara dua buluh ini, manakah yang PANJANG?',
+        visualSvg: `
+          <svg viewBox="0 0 300 100" class="w-full h-full max-h-36">
+            <!-- Buluh Panjang -->
+            <rect x="20" y="25" width="220" height="15" rx="4" fill="#84cc16"/>
+            <line x1="80" y1="25" x2="80" y2="40" stroke="#4d7c0f" stroke-width="2"/>
+            <line x1="150" y1="25" x2="150" y2="40" stroke="#4d7c0f" stroke-width="2"/>
+            <text x="130" y="20" font-size="12" font-weight="bold" fill="#3f6212">Buluh A</text>
+            
+            <!-- Buluh Pendek -->
+            <rect x="20" y="65" width="110" height="15" rx="4" fill="#a3e635"/>
+            <line x1="70" y1="65" x2="70" y2="80" stroke="#4d7c0f" stroke-width="2"/>
+            <text x="70" y="60" font-size="12" font-weight="bold" fill="#3f6212">Buluh B</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Buluh A', 'Buluh B'],
+        correct: 'Buluh A',
+        hint: 'Perhatikan buluh mana yang merentasi kawasan lebih jauh dari kiri ke kanan.'
+      },
+      {
+        id: 2,
+        level: 'Aras Rendah',
+        text: 'Lihat pokok pinang dan pokok palma. Pokok pinang adalah...',
+        visualSvg: `
+          <svg viewBox="0 0 300 120" class="w-full h-full max-h-36">
+            <!-- Pokok Pinang (Tinggi) -->
+            <rect x="60" y="20" width="12" height="80" fill="#854d0e"/>
+            <circle cx="66" cy="20" r="22" fill="#22c55e"/>
+            <text x="45" y="115" font-size="12" font-weight="bold">Pokok Pinang</text>
+            
+            <!-- Pokok Palma (Rendah) -->
+            <rect x="200" y="60" width="12" height="40" fill="#854d0e"/>
+            <circle cx="206" cy="60" r="18" fill="#15803d"/>
+            <text x="185" y="115" font-size="12" font-weight="bold">Pokok Palma</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Tinggi', 'Rendah'],
+        correct: 'Tinggi',
+        hint: 'Pokok pinang mempunyai ukuran menegak yang lebih panjang ke atas.'
+      },
+      {
+        id: 3,
+        level: 'Aras Rendah',
+        text: 'Antara tong gas dan kotak tisu, objek manakah yang BERAT?',
+        visualSvg: `
+          <svg viewBox="0 0 300 120" class="w-full h-full max-h-36">
+            <!-- Tong Gas -->
+            <rect x="50" y="30" width="50" height="70" rx="10" fill="#0284c7"/>
+            <rect x="65" y="15" width="20" height="15" fill="#0369a1"/>
+            <text x="45" y="115" font-size="12" font-weight="bold">Tong Gas</text>
+
+            <!-- Kotak Tisu -->
+            <rect x="180" y="60" width="60" height="40" rx="4" fill="#f472b6"/>
+            <rect x="200" y="50" width="20" height="10" fill="#ffffff" opacity="0.8"/>
+            <text x="175" y="115" font-size="12" font-weight="bold">Kotak Tisu</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Tong Gas', 'Kotak Tisu'],
+        correct: 'Tong Gas',
+        hint: 'Tong gas perlukan troli untuk dibawa kerana sukar diangkat.'
+      },
+      {
+        id: 4,
+        level: 'Aras Rendah',
+        text: 'Isi padu jus mangga dalam jug ini adalah...',
+        visualSvg: `
+          <svg viewBox="0 0 200 120" class="w-full h-full max-h-36">
+            <!-- Jug Penuh -->
+            <path d="M70,30 L130,30 L125,100 L75,100 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="3"/>
+            <path d="M72,35 L128,35 L124,98 L76,98 Z" fill="#fbbf24"/>
+            <text x="75" y="65" font-size="14" font-weight="bold" fill="#78350f">JUS</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Penuh', 'Sedikit', 'Setengah'],
+        correct: 'Penuh',
+        hint: 'Jus mangga berada hingga ke paras paling atas jug.'
+      },
+      {
+        id: 5,
+        level: 'Aras Rendah',
+        text: 'Antara dua jajaran kereta api, gerabak yang DEKAT dengan kepala kereta api ialah...',
+        visualSvg: `
+          <svg viewBox="0 0 300 100" class="w-full h-full max-h-36">
+            <!-- Kepala Kereta Api -->
+            <rect x="20" y="40" width="40" height="30" fill="#ef4444" rx="4"/>
+            <circle cx="30" cy="75" r="6" fill="#1e293b"/>
+            <circle cx="50" cy="75" r="6" fill="#1e293b"/>
+            
+            <!-- Gerabak A -->
+            <rect x="75" y="45" width="35" height="25" fill="#3b82f6" rx="3"/>
+            <text x="87" y="62" font-size="12" font-weight="bold" fill="#fff">A</text>
+
+            <!-- Gerabak B -->
+            <rect x="160" y="45" width="35" height="25" fill="#10b981" rx="3"/>
+            <text x="172" y="62" font-size="12" font-weight="bold" fill="#fff">B</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Gerabak A', 'Gerabak B'],
+        correct: 'Gerabak A',
+        hint: 'Pilih gerabak yang paling hampir jaraknya dengan kepala kereta api berwarna merah.'
+      },
+      {
+        id: 6,
+        level: 'Aras Rendah',
+        text: 'Timbangan: Jisim epal sama dengan berapa tin sardin?',
+        visualSvg: `
+          <svg viewBox="0 0 300 110" class="w-full h-full max-h-36">
+            <!-- Penimbang -->
+            <line x1="50" y1="50" x2="250" y2="50" stroke="#64748b" stroke-width="4"/>
+            <polygon points="150,50 140,90 160,90" fill="#475569"/>
+            
+            <!-- Kiri: Epal -->
+            <circle cx="80" cy="40" r="16" fill="#dc2626"/>
+            <!-- Kanan: 2 Tin Sardin -->
+            <rect x="200" y="32" width="16" height="16" fill="#94a3b8" rx="2"/>
+            <rect x="220" y="32" width="16" height="16" fill="#94a3b8" rx="2"/>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['1 tin', '2 tin', '3 tin'],
+        correct: '2 tin',
+        hint: 'Kira bilangan tin di sebelah kanan penimbang yang seimbang.'
+      },
+      {
+        id: 7,
+        level: 'Aras Rendah',
+        text: 'Lengkapkan istilah: Mengukur lebar meja menggunakan tapak tangan dipanggil unit...',
+        visualSvg: `
+          <svg viewBox="0 0 200 90" class="w-full h-full max-h-36">
+            <path d="M70,60 C70,30 85,20 100,20 C115,20 130,30 130,60 Z" fill="#fde047" stroke="#ca8a04" stroke-width="2"/>
+            <text x="78" y="55" font-size="12" font-weight="bold">✋ JENGKAL</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Jengkal', 'Depa', 'Langkah'],
+        correct: 'Jengkal',
+        hint: 'Ukuran dari hujung ibu jari ke hujung jari kelingking tangan.'
+      },
+      {
+        id: 8,
+        level: 'Aras Rendah',
+        text: 'Pilih objek yang paling RINGAN:',
+        visualSvg: `
+          <svg viewBox="0 0 300 90" class="w-full h-full max-h-36">
+            <!-- Kereta -->
+            <rect x="30" y="40" width="60" height="25" fill="#ef4444" rx="5"/>
+            <text x="42" y="80" font-size="11" font-weight="bold">Kereta Mainan</text>
+            
+            <!-- Belon -->
+            <circle cx="210" cy="35" r="18" fill="#ec4899"/>
+            <line x1="210" y1="53" x2="210" y2="70" stroke="#94a3b8"/>
+            <text x="195" y="80" font-size="11" font-weight="bold">Belon</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Kereta Mainan', 'Belon'],
+        correct: 'Belon',
+        hint: 'Belon terapung dan sangat mudah ditiup atau diangkat.'
+      },
+      {
+        id: 9,
+        level: 'Aras Rendah',
+        text: 'Mengukur panjang papan putih dengan mendepangkan kedua-dua tangan dipanggil...',
+        visualSvg: `
+          <svg viewBox="0 0 200 90" class="w-full h-full max-h-36">
+            <rect x="20" y="20" width="160" height="50" fill="#15803d" rx="4" stroke="#854d0e" stroke-width="4"/>
+            <text x="80" y="50" font-size="12" fill="#fff" font-weight="bold">🙋 DEPA</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Depa', 'Jengkal', 'Klip Kertas'],
+        correct: 'Depa',
+        hint: 'Menggunakan jarak mendepangkan tangan dari hujung jari kiri ke kanan.'
+      },
+      {
+        id: 10,
+        level: 'Aras Rendah',
+        text: 'Isi padu air dalam cawan A dan cawan B adalah sama, iaitu...',
+        visualSvg: `
+          <svg viewBox="0 0 250 90" class="w-full h-full max-h-36">
+            <!-- Cawan A -->
+            <rect x="50" y="30" width="35" height="40" fill="#e2e8f0" rx="3"/>
+            <rect x="52" y="50" width="31" height="18" fill="#60a5fa"/>
+            <text x="60" y="83" font-size="11" font-weight="bold">Cawan A</text>
+
+            <!-- Cawan B -->
+            <rect x="160" y="30" width="35" height="40" fill="#e2e8f0" rx="3"/>
+            <rect x="162" y="50" width="31" height="18" fill="#60a5fa"/>
+            <text x="170" y="83" font-size="11" font-weight="bold">Cawan B</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Setengah', 'Penuh', 'Suku'],
+        correct: 'Setengah',
+        hint: 'Air memenuhi separuh (1/2) daripada bekas cawan.'
+      },
+
+      // ARAS SEDERHANA (4 Soalan Tambahan)
+      {
+        id: 11,
+        level: 'Aras Sederhana',
+        text: 'Panjang pensel = 5 klip kertas. Panjang pen = 4 klip kertas. Yang manakah LEBIH PANJANG?',
+        visualSvg: `
+          <svg viewBox="0 0 300 100" class="w-full h-full max-h-36">
+            <!-- Pensel (5 unit) -->
+            <rect x="30" y="25" width="180" height="14" fill="#f59e0b" rx="2"/>
+            <text x="220" y="37" font-size="11" font-weight="bold">Pensel (5)</text>
+
+            <!-- Pen (4 unit) -->
+            <rect x="30" y="60" width="140" height="14" fill="#3b82f6" rx="2"/>
+            <text x="180" y="72" font-size="11" font-weight="bold">Pen (4)</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Pensel', 'Pen'],
+        correct: 'Pensel',
+        hint: 'Nombor 5 lebih besar daripada nombor 4.'
+      },
+      {
+        id: 12,
+        level: 'Aras Sederhana',
+        text: 'Jisim Gula = 3 tin susu. Jisim Tepung = 6 tin susu. Manakah yang LEBIH RINGAN?',
+        visualSvg: `
+          <svg viewBox="0 0 300 100" class="w-full h-full max-h-36">
+            <text x="40" y="35" font-size="14" font-weight="bold" fill="#0369a1">🍬 Gula (3 Tin)</text>
+            <text x="40" y="75" font-size="14" font-weight="bold" fill="#b45309">🌾 Tepung (6 Tin)</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Gula', 'Tepung'],
+        correct: 'Gula',
+        hint: 'Objek yang disukai dengan bilangan tin susu lebih sedikit adalah lebih ringan.'
+      },
+      {
+        id: 13,
+        level: 'Aras Sederhana',
+        text: 'Isi padu Botol A = 6 kole. Isi padu Botol B kurang 2 kole daripada Botol A. Berapakah isi padu Botol B?',
+        visualSvg: `
+          <svg viewBox="0 0 300 90" class="w-full h-full max-h-36">
+            <text x="50" y="50" font-size="16" font-weight="bold" fill="#1d4ed8">6 - 2 = ?</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['4 kole', '8 kole', '3 kole'],
+        correct: '4 kole',
+        hint: 'Tolak 2 daripada 6: (6 - 2 = 4).'
+      },
+      {
+        id: 14,
+        level: 'Aras Sederhana',
+        text: 'Mengapakah ukuran lebar meja antara Kaswini (5 jengkal) dan Amni (6 jengkal) berbeza?',
+        visualSvg: `
+          <svg viewBox="0 0 260 90" class="w-full h-full max-h-36">
+            <text x="30" y="35" font-size="12" font-weight="bold">✋ Kaswini: 5 Jengkal</text>
+            <text x="30" y="65" font-size="12" font-weight="bold">✋ Amni: 6 Jengkal</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Saiz tangan mereka berbeza', 'Meja itu berubah saiz', 'Kaswini salah kira'],
+        correct: 'Saiz tangan mereka berbeza',
+        hint: 'Unit bukan piawai seperti jengkal bergantung pada saiz tangan individu.'
+      },
+
+      // ARAS TINGGI / KBAT (1 Soalan Cabaran Utama)
+      {
+        id: 15,
+        level: 'Aras Tinggi (KBAT)',
+        text: 'KBAT: Panjang bekas pensel = 5 klip kertas. Panjang pensel = 4 klip kertas. Adakah pensel boleh disimpan DI DALAM bekas pensel?',
+        visualSvg: `
+          <svg viewBox="0 0 300 100" class="w-full h-full max-h-36">
+            <!-- Bekas Pensel (5 unit) -->
+            <rect x="40" y="20" width="200" height="35" fill="#f472b6" rx="8" stroke="#db2777" stroke-width="2"/>
+            <text x="70" y="42" font-size="12" font-weight="bold" fill="#fff">Bekas Pensel (Panjang 5)</text>
+
+            <!-- Pensel (4 unit) -->
+            <rect x="50" y="68" width="160" height="15" fill="#fbbf24" rx="3"/>
+            <text x="80" y="80" font-size="11" font-weight="bold" fill="#78350f">Pensel (Panjang 4)</text>
+          </svg>
+        `,
+        type: 'MCQ',
+        options: ['Boleh, kerana pensel lebih pendek', 'Tidak boleh, kerana pensel terlalu panjang', 'Tidak pasti'],
+        correct: 'Boleh, kerana pensel lebih pendek',
+        hint: 'Bandingkan panjang: 4 klip kertas (pensel) adalah lebih pendek daripada 5 klip kertas (bekas).'
+      }
+    ];
+
+    /* ----------------------------------------------------
+       QUIZ STATE MANAGERS
+       ---------------------------------------------------- */
+    let studentData = { name: '', studentClass: '' };
+    let activeQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let attemptsLeft = 2;
+    let maxPossibleScore = 0;
+
+    function showScreen(screenId) {
+      ['registration-screen', 'quiz-screen', 'result-screen', 'teacher-dashboard'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    function startQuiz(event) {
+      event.preventDefault();
+      playSound('click');
+
+      const nameInput = document.getElementById('student-name').value.trim();
+      const classInput = document.getElementById('student-class').value;
+
+      if (!nameInput) return;
+
+      studentData.name = nameInput;
+      studentData.studentClass = classInput;
+
+      // Filter Questions according to specification:
+      // 1 Sukses = 15 soalan (10 Rendah, 4 Sederhana, 1 Tinggi)
+      // 1 Super = 10 soalan (7 Rendah, 2 Sederhana, 1 Tinggi)
+      if (classInput === '1 Sukses') {
+        activeQuestions = [...ALL_QUESTIONS];
+      } else {
+        const rendah = ALL_QUESTIONS.filter(q => q.level === 'Aras Rendah').slice(0, 7);
+        const sederhana = ALL_QUESTIONS.filter(q => q.level === 'Aras Sederhana').slice(0, 2);
+        const kbat = ALL_QUESTIONS.filter(q => q.level === 'Aras Tinggi (KBAT)').slice(0, 1);
+        activeQuestions = [...rendah, ...sederhana, ...kbat];
+      }
+
+      currentQuestionIndex = 0;
+      score = 0;
+      maxPossibleScore = activeQuestions.length * 2; // 2 marks max per question
+
+      showScreen('quiz-screen');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const q = activeQuestions[currentQuestionIndex];
+      attemptsLeft = 2;
+
+      // Reset Feedback & Hint UI
+      document.getElementById('feedback-modal').classList.add('hidden');
+      document.getElementById('hint-box').classList.add('hidden');
+
+      // Update Tracker Bar
+      document.getElementById('question-tracker').textContent = `Soalan ${currentQuestionIndex + 1} / ${activeQuestions.length}`;
+      document.getElementById('question-level').textContent = q.level;
+      document.getElementById('current-score-display').textContent = `Markah: ${score}`;
+
+      const progressPercent = ((currentQuestionIndex) / activeQuestions.length) * 100;
+      document.getElementById('quiz-progress-bar').style.width = `${progressPercent}%`;
+
+      // Visual SVG and Text
+      document.getElementById('question-visual').innerHTML = q.visualSvg;
+      document.getElementById('question-text').textContent = q.text;
+
+      // Render Answer Options
+      const optionsContainer = document.getElementById('answer-options-container');
+      optionsContainer.innerHTML = '';
+
+      q.options.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full py-4 px-6 bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 rounded-2xl font-bold text-slate-800 text-lg btn-bounce shadow-sm transition text-center';
+        btn.textContent = opt;
+        btn.onclick = () => handleAnswerSelect(opt, btn);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function handleAnswerSelect(selectedOption, btnElement) {
+      playSound('click');
+      const q = activeQuestions[currentQuestionIndex];
+      const feedbackModal = document.getElementById('feedback-modal');
+
+      if (selectedOption === q.correct) {
+        // BETUL!
+        playSound('correct');
+        const pointsEarned = attemptsLeft === 2 ? 2 : 1;
+        score += pointsEarned;
+        document.getElementById('current-score-display').textContent = `Markah: ${score}`;
+
+        feedbackModal.className = 'mt-6 p-4 rounded-2xl text-center font-bold text-lg bg-emerald-100 text-emerald-800 border-2 border-emerald-300';
+        feedbackModal.textContent = `🎉 Syabas, Jawapan BETUL! (+${pointsEarned} Markah)`;
+        feedbackModal.classList.remove('hidden');
+
+        disableOptionButtons();
+        setTimeout(nextQuestion, 1500);
+      } else {
+        // SALAH!
+        playSound('wrong');
+        attemptsLeft--;
+
+        if (attemptsLeft === 1) {
+          // Percubaan Pertama Salah -> Papar Petunjuk (Hint)
+          feedbackModal.className = 'mt-6 p-4 rounded-2xl text-center font-bold text-lg bg-rose-100 text-rose-800 border-2 border-rose-300';
+          feedbackModal.textContent = '❌ Jawapan Kurang Tepat. Sila cuba sekali lagi!';
+          feedbackModal.classList.remove('hidden');
+
+          document.getElementById('hint-text').textContent = q.hint;
+          document.getElementById('hint-box').classList.remove('hidden');
+
+          btnElement.disabled = true;
+          btnElement.classList.add('opacity-50', 'line-through', 'bg-gray-100');
+        } else {
+          // Percubaan Kedua Pun Salah -> Show Correct Answer & 0 markah
+          feedbackModal.className = 'mt-6 p-4 rounded-2xl text-center font-bold text-lg bg-slate-200 text-slate-800 border-2 border-slate-400';
+          feedbackModal.textContent = `💡 Jawapan yang betul ialah: ${q.correct}`;
+          feedbackModal.classList.remove('hidden');
+
+          disableOptionButtons();
+          setTimeout(nextQuestion, 2200);
+        }
+      }
+    }
+
+    function disableOptionButtons() {
+      const btns = document.querySelectorAll('#answer-options-container button');
+      btns.forEach(b => b.disabled = true);
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < activeQuestions.length) {
+        loadQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    /* ----------------------------------------------------
+       FINISH QUIZ & CERTIFICATE GENERATION
+       ---------------------------------------------------- */
+    function finishQuiz() {
+      playSound('win');
+      document.getElementById('quiz-progress-bar').style.width = '100%';
+
+      // Calculate Grade TP3 - TP6
+      const percentage = (score / maxPossibleScore) * 100;
+      let grade = 'TP3';
+      let evalText = 'Murid mencapai tahap penguasaan asas dalam topik ini.';
+
+      if (percentage >= 85) {
+        grade = 'TP6';
+        evalText = 'Cemerlang! Murid menguasai kemahiran membanding, mengukur dan mereduksi masalah KBAT dengan sangat baik.';
+      } else if (percentage >= 70) {
+        grade = 'TP5';
+        evalText = 'Sangat Baik! Murid boleh mengukur dan membandingkan objek dengan tepat.';
+      } else if (percentage >= 50) {
+        grade = 'TP4';
+        evalText = 'Baik! Murid memahami konsep asas ukuran, jisim dan isi padu cecair.';
+      }
+
+      // Populate Digital Certificate
+      document.getElementById('cert-student-name').textContent = studentData.name;
+      document.getElementById('cert-student-class').textContent = studentData.studentClass;
+      document.getElementById('cert-score').textContent = `${score} / ${maxPossibleScore}`;
+      document.getElementById('cert-grade').textContent = grade;
+      document.getElementById('cert-eval-text').textContent = evalText;
+
+      const today = new Date();
+      document.getElementById('cert-date').textContent = today.toLocaleDateString('ms-MY');
+      document.getElementById('cert-id').textContent = 'CERT-' + Math.floor(100000 + Math.random() * 900000);
+
+      showScreen('result-screen');
+
+      // Save to Firebase Firestore
+      if (typeof window.saveQuizResultToFirestore === 'function') {
+        window.saveQuizResultToFirestore({
+          studentName: studentData.name,
+          studentClass: studentData.studentClass,
+          score: score,
+          maxScore: maxPossibleScore,
+          grade: grade
+        });
+      }
+    }
+
+    /* ----------------------------------------------------
+       TEACHER DASHBOARD & SECURITY PIN
+       ---------------------------------------------------- */
+    function promptTeacherPin() {
+      playSound('click');
+      const modal = document.getElementById('custom-modal');
+      const pinInput = document.getElementById('teacher-pin-input');
+      const confirmBtn = document.getElementById('modal-confirm-btn');
+
+      pinInput.value = '';
+      modal.classList.remove('hidden');
+
+      confirmBtn.onclick = () => {
+        if (pinInput.value === '1234') {
+          closeModal();
+          showScreen('teacher-dashboard');
+          if (typeof window.renderTeacherTable === 'function') {
+            window.renderTeacherTable();
+          }
+        } else {
+          document.getElementById('modal-msg').textContent = '❌ PIN Salah! Sila cuba lagi (Lalai: 1234):';
+          document.getElementById('modal-msg').classList.add('text-red-500');
+        }
+      };
+    }
+
+    function closeModal() {
+      document.getElementById('custom-modal').classList.add('hidden');
+    }
+
+    // Render Table for Teacher Dashboard
+    window.renderTeacherTable = function() {
+      const results = window.allQuizResults || [];
+      const tbody = document.getElementById('teacher-results-tbody');
+      const searchVal = document.getElementById('dashboard-search').value.toLowerCase();
+      const filterClass = document.getElementById('dashboard-filter-class').value;
+
+      // Filter Data
+      const filtered = results.filter(item => {
+        const matchesName = (item.studentName || '').toLowerCase().includes(searchVal);
+        const matchesClass = filterClass === 'ALL' || item.studentClass === filterClass;
+        return matchesName && matchesClass;
+      });
+
+      // Update Summary Stats
+      document.getElementById('stat-total-students').textContent = filtered.length;
+      if (filtered.length > 0) {
+        const avg = filtered.reduce((acc, curr) => acc + (curr.score || 0), 0) / filtered.length;
+        document.getElementById('stat-avg-score').textContent = avg.toFixed(1);
+
+        const passes = filtered.filter(i => ['TP4', 'TP5', 'TP6'].includes(i.grade)).length;
+        const passPercent = ((passes / filtered.length) * 100).toFixed(0);
+        document.getElementById('stat-pass-rate').textContent = `${passPercent}%`;
+      } else {
+        document.getElementById('stat-avg-score').textContent = '0.0';
+        document.getElementById('stat-pass-rate').textContent = '0%';
+      }
+
+      // Render Table Rows
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Tiada rekod murid dijumpai.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(item => {
+        const dateStr = item.submittedAt ? new Date(item.submittedAt).toLocaleString('ms-MY') : '-';
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-3.5 font-bold text-slate-800">${escapeHtml(item.studentName)}</td>
+            <td class="p-3.5"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-bold">${escapeHtml(item.studentClass)}</span></td>
+            <td class="p-3.5 font-bold text-amber-600">${item.score} / ${item.maxScore}</td>
+            <td class="p-3.5"><span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-extrabold">${item.grade}</span></td>
+            <td class="p-3.5 text-xs text-slate-500">${dateStr}</td>
+            <td class="p-3.5 text-center">
+              <button onclick="confirmDeleteRecord('${item.id}')" class="p-1.5 bg-rose-100 hover:bg-rose-200 text-rose-600 rounded-lg text-xs font-bold transition">
+                🗑️ Padam
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    };
+
+    function confirmDeleteRecord(id) {
+      if (typeof window.deleteQuizRecord === 'function') {
+        window.deleteQuizRecord(id);
+      }
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+  </script>
+</body>
+</html>
