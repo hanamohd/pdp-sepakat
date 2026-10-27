@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Kuiz Matematik Tahun 1 - Panjang, Jisim & Isipadu Cecair</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tone.js for Sound Effects -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  
+  <!-- Google Fonts: Fredoka & Quicksand for Kid-Friendly UI -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDK Modules -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Global Firebase Configuration & Setup
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'kuiz-matematik-tahun1';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: "demo-api-key",
+      authDomain: "demo-project.firebaseapp.com",
+      projectId: "demo-project",
+      storageBucket: "demo-project.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let quizResultsUnsubscribe = null;
+
+    // Authenticate user
+    async function initAuth() {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+          currentUser = userCredential.user;
+        } else {
+          const userCredential = await signInAnonymously(auth);
+          currentUser = userCredential.user;
+        }
+        console.log("Authenticated as:", currentUser.uid);
+      } catch (error) {
+        console.error("Auth Error:", error);
+      }
+    }
+
+    initAuth();
+
+    // Firebase database functions exported to window
+    window.saveQuizResultToCloud = async function(data) {
+      if (!currentUser) {
+        await initAuth();
+      }
+      if (!currentUser) {
+        console.warn("User not authenticated, unable to save to cloud.");
+        return;
+      }
+      try {
+        const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'quiz_results');
+        await addDoc(resultsCol, {
+          ...data,
+          userId: currentUser.uid,
+          createdAt: new Date().toISOString()
+        });
+        console.log("Result saved to Firestore successfully!");
+      } catch (err) {
+        console.error("Error saving result to Firestore:", err);
+      }
+    };
+
+    window.subscribeToQuizResults = function(callback) {
+      if (!currentUser) return;
+      const resultsCol = collection(db, 'artifacts', appId, 'public', 'data', 'quiz_results');
+      
+      if (quizResultsUnsubscribe) {
+        quizResultsUnsubscribe();
+      }
+
+      quizResultsUnsubscribe = onSnapshot(resultsCol, (snapshot) => {
+        const results = [];
+        snapshot.forEach((docSnap) => {
+          results.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        callback(results);
+      }, (error) => {
+        console.error("Firestore snapshot error:", error);
+      });
+    };
+
+    window.deleteQuizRecord = async function(recordId) {
+      if (!currentUser) return;
+      try {
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'quiz_results', recordId);
+        await deleteDoc(docRef);
+      } catch (err) {
+        console.error("Error deleting document:", err);
+      }
+    };
+  </script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pastelRed: '#FF8B94',
+            pastelRedDark: '#E84A5F',
+            pastelPurple: '#D8B4F8',
+            pastelPurpleDark: '#8A4FFF',
+            pastelBg: '#FFF5F8',
+            pastelYellow: '#FFEAA7',
+            pastelGreen: '#55E6C1',
+            pastelGreenDark: '#10AC84'
+          },
+          fontFamily: {
+            fredoka: ['Fredoka', 'sans-serif'],
+            quicksand: ['Quicksand', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Fredoka', sans-serif;
+      background-color: #FFF5F8;
+      background-image: radial-gradient(#D8B4F8 1px, transparent 1px);
+      background-size: 24px 24px;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .btn-bounce {
+      transition: all 0.2s ease;
+    }
+    .btn-bounce:hover {
+      transform: translateY(-3px) scale(1.02);
+    }
+    .btn-bounce:active {
+      transform: translateY(2px) scale(0.98);
+    }
+
+    .interactive-card {
+      box-shadow: 0 12px 24px -6px rgba(138, 79, 255, 0.15);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FFF5F8;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #D8B4F8;
+      border-radius: 10px;
+    }
+
+    @media print {
+      body {
+        background: white !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-gray-800">
+
+  <!-- TOP HEADER -->
+  <header class="no-print bg-gradient-to-r from-pastelRedDark via-pastelPurpleDark to-pastelRedDark text-white py-4 px-6 shadow-xl rounded-b-3xl border-b-4 border-white">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <span class="text-4xl">📏</span>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold tracking-wide drop-shadow-md">
+            KUIMAT TAHUN 1
+          </h1>
+          <p class="text-xs md:text-sm font-quicksand text-pink-100">Panjang, Jisim & Isipadu Cecair</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openTeacherDashboard()" id="btn-teacher" class="bg-yellow-400 hover:bg-yellow-500 text-purple-950 px-3 py-2 md:px-4 rounded-2xl flex items-center gap-1.5 border-2 border-white text-xs md:text-sm font-bold transition shadow">
+          <span>👨‍🏫</span> <span class="hidden sm:inline">Mod Guru</span>
+        </button>
+        <button onclick="toggleAudio()" id="btn-audio" class="bg-white/20 hover:bg-white/30 text-white p-2 md:px-4 md:py-2 rounded-2xl flex items-center gap-2 border border-white/40 text-xs md:text-sm font-bold transition">
+          <span id="audio-icon">🔊</span> <span class="hidden md:inline">Bunyi: On</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container mx-auto px-4 py-6 max-w-3xl flex-grow flex items-center justify-center">
+
+    <!-- 1. REGISTRATION SCREEN -->
+    <div id="screen-register" class="w-full bg-white rounded-3xl p-6 md:p-10 border-4 border-pastelPurple interactive-card text-center my-auto transition-all">
+      <div class="mb-6">
+        <div class="inline-block p-4 bg-purple-100 rounded-full mb-3 animate-bounce">
+          <span class="text-6xl">✏️</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-extrabold text-pastelRedDark">Selamat Datang Cilik Bijak!</h2>
+        <p class="text-lg md:text-xl text-gray-600 mt-1 font-quicksand">Isi maklumat anda untuk memulakan cabaran kuiz interaktif ini.</p>
+      </div>
+
+      <form id="form-register" onsubmit="startQuiz(event)" class="space-y-5 text-left max-w-lg mx-auto">
+        <div>
+          <label for="student-name" class="block text-xl font-bold text-pastelPurpleDark mb-2">
+            👤 Nama Murid:
+          </label>
+          <input 
+            type="text" 
+            id="student-name" 
+            required 
+            placeholder="Taip nama penuh anda di sini..." 
+            class="w-full text-xl p-4 border-4 border-pastelPurple/40 focus:border-pastelRedDark rounded-2xl focus:outline-none bg-pink-50/50 transition font-quicksand"
+          />
+        </div>
+
+        <div>
+          <label for="student-class" class="block text-xl font-bold text-pastelPurpleDark mb-2">
+            🏫 Kelas:
+          </label>
+          <select 
+            id="student-class" 
+            required 
+            class="w-full text-xl p-4 border-4 border-pastelPurple/40 focus:border-pastelRedDark rounded-2xl focus:outline-none bg-white transition font-quicksand"
+          >
+            <option value="1 Sukses" selected>1 Sukses</option>
+            <option value="1 Pintar">1 Pintar</option>
+            <option value="1 Bijak">1 Bijak</option>
+            <option value="1 Cerdas">1 Cerdas</option>
+          </select>
+        </div>
+
+        <button 
+          type="submit" 
+          class="btn-bounce w-full bg-gradient-to-r from-pastelRedDark to-pink-500 hover:from-red-500 hover:to-pink-600 text-white text-2xl font-extrabold py-4 rounded-2xl shadow-lg border-b-6 border-red-800 transition mt-4"
+        >
+          Mula Jawab Soalan! 🚀
+        </button>
+      </form>
+    </div>
+
+    <!-- 2. QUIZ SCREEN -->
+    <div id="screen-quiz" class="hidden w-full my-auto space-y-4">
+      
+      <!-- Top Score & User Info Bar -->
+      <div class="bg-white p-4 rounded-2xl border-3 border-pastelPurple shadow-md flex flex-wrap justify-between items-center text-base md:text-xl font-bold gap-2">
+        <div class="flex items-center gap-2 text-pastelPurpleDark">
+          <span class="bg-purple-100 p-2 rounded-xl">👤</span>
+          <div>
+            <span id="display-name" class="text-pastelRedDark block leading-tight"></span>
+            <span class="text-xs text-gray-500 font-quicksand" id="display-school-class"></span>
+          </div>
+        </div>
+        <div class="bg-pastelYellow px-4 py-2 rounded-2xl border-2 border-amber-400 text-amber-900 flex items-center gap-2">
+          <span>⭐ Markah:</span>
+          <span id="score" class="text-2xl font-extrabold text-amber-600">0</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="bg-gray-200 rounded-full h-5 border-2 border-pastelPurple overflow-hidden p-0.5">
+        <div id="progress-bar" class="bg-gradient-to-r from-pastelRedDark to-pastelPurpleDark h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+
+      <!-- Main Question Card -->
+      <div class="bg-white rounded-3xl p-5 md:p-8 border-4 border-pastelPurple interactive-card relative">
+        
+        <!-- Header Info -->
+        <div class="flex justify-between items-center mb-4">
+          <span id="question-number" class="bg-purple-100 text-purple-900 text-lg md:text-xl font-bold px-4 py-1.5 rounded-2xl border border-purple-300">
+            Soalan 1 / 15
+          </span>
+          <span id="badge-level" class="text-sm md:text-base font-bold px-3 py-1 rounded-full border shadow-sm">
+            Aras
+          </span>
+        </div>
+
+        <!-- Question Title -->
+        <h3 id="question-text" class="text-xl md:text-2xl font-bold text-gray-800 mb-4 leading-relaxed">
+          Soalan...
+        </h3>
+
+        <!-- Interactive SVG Graphic Illustration Box -->
+        <div id="illustration-container" class="mb-6 p-4 bg-gradient-to-b from-purple-50 to-pink-50 rounded-2xl border-2 border-purple-100 flex justify-center items-center min-h-[160px]">
+          <!-- SVG output injected here -->
+        </div>
+
+        <!-- Dynamic Options / Inputs Container -->
+        <div id="interactive-container" class="mb-6">
+          <!-- Options rendered here -->
+        </div>
+
+        <!-- Feedback Box -->
+        <div id="feedback-box" class="hidden mb-6 p-4 rounded-2xl text-lg md:text-xl font-bold text-center animate-bounce">
+        </div>
+
+        <!-- Control Action Buttons -->
+        <div class="flex justify-end gap-4">
+          <button 
+            id="btn-check" 
+            onclick="checkAnswer()" 
+            class="btn-bounce w-full bg-gradient-to-r from-pastelPurpleDark to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-xl md:text-2xl font-bold py-3.5 px-8 rounded-2xl shadow-lg border-b-4 border-purple-950 transition"
+          >
+            Semak Jawapan 🔍
+          </button>
+          <button 
+            id="btn-next" 
+            onclick="nextQuestion()" 
+            class="btn-bounce hidden w-full bg-gradient-to-r from-pastelGreenDark to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xl md:text-2xl font-bold py-3.5 px-8 rounded-2xl shadow-lg border-b-4 border-emerald-900 transition"
+          >
+            Soalan Seterusnya ➡️
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 3. RESULT SCREEN -->
+    <div id="screen-result" class="hidden w-full bg-white rounded-3xl p-6 md:p-10 border-4 border-pastelPurple interactive-card text-center my-auto">
+      <div class="no-print">
+        <div class="text-7xl mb-2 animate-bounce">🏆</div>
+        <h2 class="text-3xl md:text-4xl font-extrabold text-pastelRedDark mb-1">Tahniah! Anda Telah Tamat!</h2>
+        <p class="text-lg md:text-xl text-gray-600 mb-6 font-quicksand">Berikut adalah keputusan rasmi modul latihan anda:</p>
+      </div>
+
+      <!-- Printable Certificate Box -->
+      <div class="bg-pink-50 p-6 md:p-8 rounded-3xl border-4 border-dashed border-pastelPurple text-left mb-6 relative">
+        <div class="text-center mb-6">
+          <h3 class="text-2xl font-extrabold text-pastelPurpleDark border-b-2 border-pastelPurple inline-block pb-1">SIJIL PENCAPAIAN KUIZ</h3>
+          <p class="text-xs text-gray-500 mt-1">Matematik Tahun 1: Panjang, Jisim & Isipadu Cecair</p>
+        </div>
+
+        <div class="space-y-3 text-lg md:text-xl font-semibold font-quicksand text-gray-700">
+          <p class="flex justify-between border-b pb-1"><span>👤 Nama Murid:</span> <span id="res-name" class="font-bold text-pastelRedDark"></span></p>
+          <p class="flex justify-between border-b pb-1"><span>🏫 Kelas:</span> <span id="res-school-class" class="font-bold text-pastelPurpleDark"></span></p>
+          <p class="flex justify-between border-b pb-1"><span>📅 Tarikh Disiapkan:</span> <span id="res-date" class="font-bold text-gray-800"></span></p>
+        </div>
+
+        <div class="my-6 p-4 bg-amber-100/80 rounded-2xl border-2 border-amber-300 text-center">
+          <p class="text-lg text-amber-900 font-bold">Jumlah Markah Keseluruhan:</p>
+          <p class="text-5xl font-extrabold text-amber-600 my-2"><span id="res-score">0</span> <span class="text-2xl text-amber-800">/ 30</span></p>
+          <p id="res-grade" class="text-xl font-extrabold text-purple-900 mt-2"></p>
+        </div>
+
+        <div class="hidden print-only mt-8 text-center text-sm text-gray-500">
+          Disahkan secara digital oleh Aplikasi Kuiz Matematik Tahun 1.
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col md:flex-row gap-4 no-print">
+        <button 
+          onclick="window.print()" 
+          class="btn-bounce w-full bg-blue-500 hover:bg-blue-600 text-white text-xl font-bold py-3.5 px-6 rounded-2xl shadow-md border-b-4 border-blue-800 transition flex items-center justify-center gap-2"
+        >
+          🖨️ Cetak / Simpan Sijil
+        </button>
+        <button 
+          onclick="restartQuiz()" 
+          class="btn-bounce w-full bg-pastelRedDark hover:bg-red-600 text-white text-xl font-bold py-3.5 px-6 rounded-2xl shadow-md border-b-4 border-red-800 transition flex items-center justify-center gap-2"
+        >
+          🔄 Cuba Lagi
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. TEACHER DASHBOARD SCREEN -->
+    <div id="screen-teacher" class="hidden w-full bg-white rounded-3xl p-6 md:p-8 border-4 border-pastelPurple interactive-card my-auto">
+      <div class="flex justify-between items-center pb-4 mb-4 border-b-2 border-purple-100">
+        <div class="flex items-center gap-3">
+          <span class="text-4xl">📊</span>
+          <div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-pastelPurpleDark">Papan Pemuka Guru</h2>
+            <p class="text-xs md:text-sm text-gray-500 font-quicksand">Rekod Respons dan Analisis Murid (Firestore Cloud Database)</p>
+          </div>
+        </div>
+        <button onclick="closeTeacherDashboard()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl font-bold transition">
+          ❌ Tutup
+        </button>
+      </div>
+
+      <!-- Stats Summary -->
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+        <div class="bg-purple-50 p-4 rounded-2xl border border-purple-200 text-center">
+          <p class="text-xs text-gray-500 font-bold">Jumlah Responden</p>
+          <p id="teacher-stat-count" class="text-3xl font-extrabold text-pastelPurpleDark">0</p>
+        </div>
+        <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 text-center">
+          <p class="text-xs text-gray-500 font-bold">Purata Markah</p>
+          <p id="teacher-stat-avg" class="text-3xl font-extrabold text-amber-600">0 / 30</p>
+        </div>
+        <div class="col-span-2 md:col-span-1 bg-emerald-50 p-4 rounded-2xl border border-emerald-200 text-center">
+          <p class="text-xs text-gray-500 font-bold">Peratus Kelulusan</p>
+          <p id="teacher-stat-pass" class="text-3xl font-extrabold text-emerald-600">0%</p>
+        </div>
+      </div>
+
+      <!-- Filters & Search -->
+      <div class="flex flex-col sm:flex-row gap-3 mb-4">
+        <input 
+          type="text" 
+          id="teacher-search" 
+          oninput="renderTeacherTable()" 
+          placeholder="🔍 Cari nama murid..." 
+          class="flex-1 p-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:border-pastelPurpleDark font-quicksand"
+        />
+        <select 
+          id="teacher-filter-class" 
+          onchange="renderTeacherTable()" 
+          class="p-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:border-pastelPurpleDark font-quicksand bg-white"
+        >
+          <option value="ALL">Semua Kelas</option>
+          <option value="1 Sukses">1 Sukses</option>
+          <option value="1 Pintar">1 Pintar</option>
+          <option value="1 Bijak">1 Bijak</option>
+          <option value="1 Cerdas">1 Cerdas</option>
+        </select>
+      </div>
+
+      <!-- Table Container -->
+      <div class="overflow-x-auto rounded-2xl border-2 border-purple-100 max-h-96">
+        <table class="w-full text-left font-quicksand text-sm md:text-base">
+          <thead class="bg-purple-100 text-purple-900 sticky top-0 font-bold">
+            <tr>
+              <th class="p-3">#</th>
+              <th class="p-3">Nama Murid</th>
+              <th class="p-3">Kelas</th>
+              <th class="p-3 text-center">Markah</th>
+              <th class="p-3">Tarikh & Masa</th>
+              <th class="p-3 text-center">Tindakan</th>
+            </tr>
+          </thead>
+          <tbody id="teacher-table-body" class="divide-y divide-purple-50">
+            <tr>
+              <td colspan="6" class="p-6 text-center text-gray-400 font-bold">Memuatkan data rekod murid...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- CUSTOM MODAL DIALOG (No alert) -->
+  <div id="modal-teacher-pass" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full border-4 border-pastelPurple text-center shadow-2xl">
+      <div class="text-5xl mb-2">🔐</div>
+      <h3 class="text-2xl font-extrabold text-pastelPurpleDark mb-1">Akses Mod Guru</h3>
+      <p class="text-sm text-gray-500 mb-4 font-quicksand">Sila masukkan PIN Guru untuk teruskan.</p>
+      
+      <input 
+        type="password" 
+        id="input-teacher-pin" 
+        placeholder="Masukkan PIN (Lalai: 1234)" 
+        class="w-full text-center text-xl p-3 border-3 border-purple-200 rounded-2xl focus:outline-none focus:border-pastelRedDark font-quicksand mb-4"
+      />
+
+      <div id="pin-error-msg" class="hidden text-sm text-red-500 font-bold mb-3 font-quicksand">
+        ❌ PIN Salah! Sila cuba lagi.
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="closePinModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-2xl transition">
+          Batal
+        </button>
+        <button onclick="verifyTeacherPin()" class="w-1/2 bg-pastelPurpleDark hover:bg-purple-800 text-white font-bold py-3 rounded-2xl transition shadow">
+          Masuk 🚀
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="no-print text-center py-4 text-gray-500 text-sm font-quicksand font-bold border-t border-purple-100 bg-white/60">
+    Aplikasi Kuiz Matematik Tahun 1 • Sesuai untuk Murid Sekolah Kebangsaan
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // --- AUDIO SYNTH SETUP (Tone.js) ---
+    let audioEnabled = true;
+    const synth = new Tone.Synth().toDestination();
+
+    function playSound(type) {
+      if (!audioEnabled) return;
+      try {
+        if (Tone.context.state !== 'running') {
+          Tone.start();
+        }
+        if (type === 'correct') {
+          synth.triggerAttackRelease("G5", "8n");
+          setTimeout(() => synth.triggerAttackRelease("C6", "8n"), 120);
+        } else if (type === 'wrong') {
+          synth.triggerAttackRelease("C3", "8n");
+          setTimeout(() => synth.triggerAttackRelease("G2", "8n"), 120);
+        } else if (type === 'click') {
+          synth.triggerAttackRelease("E5", "16n");
+        } else if (type === 'win') {
+          synth.triggerAttackRelease("C5", "8n");
+          setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 100);
+          setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 200);
+          setTimeout(() => synth.triggerAttackRelease("C6", "4n"), 300);
+        }
+      } catch (e) {
+        console.log("Audio play error:", e);
+      }
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const btn = document.getElementById('btn-audio');
+      const icon = document.getElementById('audio-icon');
+      if (audioEnabled) {
+        btn.innerHTML = `<span>🔊</span> <span class="hidden md:inline">Bunyi: On</span>`;
+      } else {
+        btn.innerHTML = `<span>🔇</span> <span class="hidden md:inline">Bunyi: Off</span>`;
+      }
+    }
+
+    // --- SVG GRAPHICS GENERATOR FOR QUESTIONS ---
+    function getGraphicSVG(type) {
+      switch(type) {
+        case 'pokok':
+          return `
+            <svg width="240" height="130" viewBox="0 0 240 130" class="max-w-full">
+              <!-- Pokok Tinggi -->
+              <rect x="35" y="50" width="10" height="60" fill="#8B4513"/>
+              <circle cx="40" cy="40" r="25" fill="#2ECC71"/>
+              <text x="40" y="125" font-size="12" font-weight="bold" text-anchor="middle" fill="#333">Pokok Kelapa (Tinggi)</text>
+              
+              <!-- Pokok Rendah -->
+              <rect x="175" y="80" width="10" height="30" fill="#8B4513"/>
+              <circle cx="180" cy="75" r="15" fill="#27AE60"/>
+              <text x="180" y="125" font-size="12" font-weight="bold" text-anchor="middle" fill="#333">Pokok Bunga (Rendah)</text>
+            </svg>
+          `;
+        case 'pensel':
+          return `
+            <svg width="260" height="110" viewBox="0 0 260 110" class="max-w-full">
+              <!-- Pensel Panjang -->
+              <rect x="20" y="25" width="180" height="18" fill="#F1C40F" rx="3"/>
+              <polygon points="200,25 220,34 200,43" fill="#E67E22"/>
+              <text x="110" y="18" font-size="12" font-weight="bold" text-anchor="middle" fill="#333">Pensel Baharu (Panjang)</text>
+              
+              <!-- Pensel Pendek -->
+              <rect x="20" y="65" width="70" height="18" fill="#E74C3C" rx="3"/>
+              <polygon points="90,65 105,74 90,83" fill="#C0392B"/>
+              <text x="60" y="100" font-size="12" font-weight="bold" text-anchor="middle" fill="#333">Pembaris Patah (Pendek)</text>
+            </svg>
+          `;
+        case 'dacing_gas':
+          return `
+            <svg width="240" height="130" viewBox="0 0 240 130" class="max-w-full">
+              <!-- Tapak Dacing Senget -->
+              <polygon points="120,30 110,100 130,100" fill="#7F8C8D"/>
+              <line x1="40" y1="70" x2="200" y2="40" stroke="#34495E" stroke-width="6"/>
+              
+              <!-- Sisi Berat (Tong Gas) -->
+              <line x1="40" y1="70" x2="40" y2="85" stroke="#7F8C8D" stroke-width="2"/>
+              <rect x="25" y="85" width="30" height="30" fill="#E74C3C" rx="5"/>
+              <text x="40" y="105" font-size="10" font-weight="bold" text-anchor="middle" fill="white">GAS</text>
+
+              <!-- Sisi Ringan (Tisu) -->
+              <line x1="200" y1="40" x2="200" y2="55" stroke="#7F8C8D" stroke-width="2"/>
+              <rect x="188" y="55" width="24" height="18" fill="#ECF0F1" stroke="#BDC3C7" rx="3"/>
+              <text x="200" y="68" font-size="8" font-weight="bold" text-anchor="middle" fill="#333">Tisu</text>
+            </svg>
+          `;
+        case 'belon_batu':
+          return `
+            <svg width="240" height="120" viewBox="0 0 240 120" class="max-w-full">
+              <!-- Belon -->
+              <ellipse cx="60" cy="45" rx="20" ry="25" fill="#FF7675"/>
+              <polygon points="60,70 56,76 64,76" fill="#D63031"/>
+              <path d="M60 76 Q 65 90 58 100" stroke="#666" fill="none" stroke-width="2"/>
+              <text x="60" y="115" font-size="12" font-weight="bold" text-anchor="middle" fill="#333">Sebiji Belon</text>
+
+              <!-- Batu Besar -->
+              <path d="M160 85 Q 170 60 190 65 Q 210 70 205 90 Q 180 100 160 85 Z" fill="#636E72"/>
+              <text x="185" y="115" font-size="12" font-weight="bold" text-anchor="middle" fill="#333">Batu Besar</text>
+            </svg>
+          `;
+        case 'isipadu_penuh':
+          return `
+            <svg width="220" height="120" viewBox="0 0 220 120" class="max-w-full">
+              <!-- Jug Penuh -->
+              <rect x="40" y="30" width="50" height="70" fill="#E0F7FA" stroke="#00ACC1" stroke-width="3" rx="5"/>
+              <rect x="42" y="32" width="46" height="66" fill="#29B6F6" rx="3"/>
+              <path d="M90 45 Q 105 60 90 85" fill="none" stroke="#00ACC1" stroke-width="4"/>
+              <text x="65" y="115" font-size="12" font-weight="bold" text-anchor="middle" fill="#333">Jug A (Penuh)</text>
+
+              <!-- Cawan Sedikit -->
+              <rect x="150" y="60" width="35" height="40" fill="#E0F7FA" stroke="#00ACC1" stroke-width="3" rx="3"/>
+              <rect x="152" y="85" width="31" height="13" fill="#29B6F6"/>
+              <text x="167" y="115" font-size="12" font-weight="bold" text-anchor="middle" fill="#333">Cawan (Sedikit)</text>
+            </svg>
+          `;
+        case 'gerabak':
+          return `
+            <svg width="260" height="100" viewBox="0 0 260 100" class="max-w-full">
+              <!-- Kereta Api kepala -->
+              <rect x="20" y="30" width="50" height="40" fill="#E74C3C" rx="5"/>
+              <circle cx="35" cy="75" r="8" fill="#333"/>
+              <circle cx="55" cy="75" r="8" fill="#333"/>
+
+              <!-- Gerabak A (Dekat) -->
+              <rect x="80" y="40" width="45" height="30" fill="#F1C40F" rx="3"/>
+              <line x1="70" y1="55" x2="80" y2="55" stroke="#333" stroke-width="3"/>
+              <circle cx="92" cy="75" r="6" fill="#333"/>
+              <circle cx="113" cy="75" r="6" fill="#333"/>
+              <text x="102" y="30" font-size="10" font-weight="bold" text-anchor="middle" fill="#27AE60">Dekat</text>
+
+              <!-- Gerabak B (Jauh) -->
+              <rect x="180" y="40" width="45" height="30" fill="#3498DB" rx="3"/>
+              <line x1="125" y1="55" x2="180" y2="55" stroke="#999" stroke-dasharray="3,3" stroke-width="2"/>
+              <circle cx="192" cy="75" r="6" fill="#333"/>
+              <circle cx="213" cy="75" r="6" fill="#333"/>
+              <text x="202" y="30" font-size="10" font-weight="bold" text-anchor="middle" fill="#C0392B">Jauh</text>
+            </svg>
+          `;
+        case 'jengkal':
+          return `
+            <svg width="220" height="110" viewBox="0 0 220 110" class="max-w-full">
+              <!-- Meja -->
+              <rect x="20" y="60" width="180" height="12" fill="#8B4513" rx="2"/>
+              <rect x="30" y="72" width="10" height="30" fill="#A0522D"/>
+              <rect x="180" y="72" width="10" height="30" fill="#A0522D"/>
+              
+              <!-- Tangan Jengkal -->
+              <path d="M40 55 Q 80 20 120 55" stroke="#E84A5F" stroke-width="4" stroke-dasharray="4,4" fill="none"/>
+              <text x="80" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#E84A5F">🤚 Jengkal Tangan</text>
+            </svg>
+          `;
+        case 'separuh':
+          return `
+            <svg width="180" height="110" viewBox="0 0 180 110" class="max-w-full">
+              <!-- Cawan Separuh -->
+              <rect x="65" y="25" width="50" height="65" fill="#FFF" stroke="#8A4FFF" stroke-width="3" rx="5"/>
+              <rect x="68" y="58" width="44" height="30" fill="#FF7675" rx="2"/>
+              <line x1="68" y1="58" x2="112" y2="58" stroke="#D63031" stroke-width="2"/>
+              <text x="90" y="105" font-size="12" font-weight="bold" text-anchor="middle" fill="#333">Paras Separuh / Setengah</text>
+            </svg>
+          `;
+        case 'dacing_senget':
+          return `
+            <svg width="240" height="110" viewBox="0 0 240 110" class="max-w-full">
+              <polygon points="120,30 110,95 130,95" fill="#7F8C8D"/>
+              <line x1="40" y1="75" x2="200" y2="35" stroke="#2C3E50" stroke-width="6"/>
+              
+              <circle cx="40" cy="85" r="15" fill="#E74C3C"/>
+              <text x="40" y="89" font-size="10" font-weight="bold" text-anchor="middle" fill="white">Berat</text>
+
+              <circle cx="200" cy="25" r="10" fill="#2ECC71"/>
+              <text x="200" y="28" font-size="8" font-weight="bold" text-anchor="middle" fill="white">Ringan</text>
+            </svg>
+          `;
+        case 'depa':
+          return `
+            <svg width="240" height="110" viewBox="0 0 240 110" class="max-w-full">
+              <rect x="30" y="20" width="180" height="60" fill="#34495E" rx="5"/>
+              <text x="120" y="55" font-size="14" font-weight="bold" text-anchor="middle" fill="white">PAPAN HITAM</text>
+              <line x1="30" y1="90" x2="210" y2="90" stroke="#E84A5F" stroke-width="3"/>
+              <text x="120" y="105" font-size="12" font-weight="bold" text-anchor="middle" fill="#E84A5F font-quicksand">📐 Ukur Panjang (Depa)</text>
+            </svg>
+          `;
+        case 'timbang_guli':
+          return `
+            <svg width="260" height="110" viewBox="0 0 260 110" class="max-w-full">
+              <!-- Buku Merah = 5 guli -->
+              <rect x="20" y="30" width="30" height="40" fill="#E74C3C" rx="3"/>
+              <text x="35" y="85" font-size="11" font-weight="bold" text-anchor="middle">Buku Merah (5 Guli)</text>
+
+              <!-- Buku Biru = 8 guli -->
+              <rect x="160" y="20" width="30" height="50" fill="#3498DB" rx="3"/>
+              <text x="175" y="85" font-size="11" font-weight="bold" text-anchor="middle">Buku Biru (8 Guli)</text>
+            </svg>
+          `;
+        case 'sukat_cawan':
+          return `
+            <svg width="260" height="110" viewBox="0 0 260 110" class="max-w-full">
+              <rect x="30" y="35" width="45" height="50" fill="#9B59B6" rx="4"/>
+              <text x="52" y="100" font-size="11" font-weight="bold" text-anchor="middle">Bekas A (3 Cawan)</text>
+
+              <rect x="160" y="20" width="55" height="65" fill="#1ABC9C" rx="4"/>
+              <text x="187" y="100" font-size="11" font-weight="bold" text-anchor="middle">Bekas B (7 Cawan)</text>
+            </svg>
+          `;
+        case 'pen_pensel':
+          return `
+            <svg width="260" height="110" viewBox="0 0 260 110" class="max-w-full">
+              <!-- Pen = 4 klip -->
+              <rect x="30" y="25" width="100" height="14" fill="#34495E" rx="3"/>
+              <text x="80" y="18" font-size="11" font-weight="bold" text-anchor="middle">Pen (4 Klip Kertas)</text>
+
+              <!-- Pensel = 6 klip -->
+              <rect x="30" y="65" width="150" height="14" fill="#F1C40F" rx="3"/>
+              <text x="105" y="58" font-size="11" font-weight="bold" text-anchor="middle">Pensel (6 Klip Kertas)</text>
+            </svg>
+          `;
+        case 'epal_mangga':
+          return `
+            <svg width="260" height="110" viewBox="0 0 260 110" class="max-w-full">
+              <!-- Epal = 2 tin -->
+              <circle cx="50" cy="40" r="18" fill="#E74C3C"/>
+              <text x="50" y="80" font-size="11" font-weight="bold" text-anchor="middle">Epal (2 Tin)</text>
+
+              <!-- Mangga = 3 tin -->
+              <ellipse cx="190" cy="40" rx="22" ry="16" fill="#F39C12"/>
+              <text x="190" y="80" font-size="11" font-weight="bold" text-anchor="middle">Mangga (3 Tin)</text>
+            </svg>
+          `;
+        case 'bekas_pensel':
+          return `
+            <svg width="260" height="110" viewBox="0 0 260 110" class="max-w-full">
+              <!-- Bekas Pensel = 5 Pemadam -->
+              <rect x="30" y="20" width="160" height="35" fill="#9B59B6" rx="8" stroke="#8E44AD" stroke-width="2"/>
+              <text x="110" y="42" font-size="12" font-weight="bold" text-anchor="middle" fill="white">Bekas Pensel (Panjang 5 Pemadam)</text>
+
+              <!-- Pensel Amir = 4 Pemadam -->
+              <rect x="30" y="70" width="130" height="14" fill="#2ECC71" rx="3"/>
+              <text x="95" y="100" font-size="11" font-weight="bold" text-anchor="middle" fill="#27AE60">Pensel Amir (Panjang 4 Pemadam)</text>
+            </svg>
+          `;
+        default:
+          return `<div class="text-4xl">📊</div>`;
+      }
+    }
+
+    // --- QUIZ QUESTIONS DATA (15 Questions: 10 Low, 4 Medium, 1 High KBAT) ---
+    const questions = [
+      // === LOW LEVEL (10 Questions) ===
+      {
+        id: 1,
+        level: "Rendah",
+        graphic: "pokok",
+        type: "mcq",
+        question: "Pokok manakah yang lebih <b>TINGGI</b>?",
+        options: ["Pokok Kelapa", "Pokok Bunga"],
+        answer: "Pokok Kelapa",
+        hint: "Pokok kelapa tumbuh tinggi menghala ke udara."
+      },
+      {
+        id: 2,
+        level: "Rendah",
+        graphic: "pensel",
+        type: "mcq",
+        question: "Antara dua objek ini, yang manakah <b>PANJANG</b>?",
+        options: ["Pensel Baharu", "Pembaris Patah"],
+        answer: "Pensel Baharu",
+        hint: "Bandingkan jarak dari hujung ke hujung."
+      },
+      {
+        id: 3,
+        level: "Rendah",
+        graphic: "dacing_gas",
+        type: "mcq",
+        question: "Benda manakah yang lebih <b>BERAT</b>?",
+        options: ["Tong Gas", "Kotak Tisu"],
+        answer: "Tong Gas",
+        hint: "Tong gas memerlukan tenaga kuat untuk diangkat."
+      },
+      {
+        id: 4,
+        level: "Rendah",
+        graphic: "belon_batu",
+        type: "mcq",
+        question: "Benda manakah yang lebih <b>RINGAN</b>?",
+        options: ["Sebiji Belon", "Sebiji Batu Besar"],
+        answer: "Sebiji Belon",
+        hint: "Belon sangat ringan dan mudah melayang."
+      },
+      {
+        id: 5,
+        level: "Rendah",
+        graphic: "isipadu_penuh",
+        type: "mcq",
+        question: "Pilih status isi padu cecair bagi jug yang diisi air sehingga ke atas.",
+        options: ["Isi padu Penuh", "Isi padu Sedikit"],
+        answer: "Isi padu Penuh",
+        hint: "Air memenuhi seluruh ruang bekas."
+      },
+      {
+        id: 6,
+        level: "Rendah",
+        graphic: "gerabak",
+        type: "mcq",
+        question: "Gerabak A berada berdekatan kepala kereta api. Gerabak A adalah...",
+        options: ["Dekat", "Jauh"],
+        answer: "Dekat",
+        hint: "Jarak yang pendek dipanggil dekat."
+      },
+      {
+        id: 7,
+        level: "Rendah",
+        graphic: "jengkal",
+        type: "mcq",
+        question: "Ukuran lebar meja menggunakan julatan tapak tangan dipanggil...",
+        options: ["Jengkal", "Langkah"],
+        answer: "Jengkal",
+        hint: "Jengkal menggunakan jarak antara ibu jari dan jari bunting/kelinking."
+      },
+      {
+        id: 8,
+        level: "Rendah",
+        graphic: "separuh",
+        type: "mcq",
+        question: "Isi padu jus tinggal separuh cawan. Istilah lain bagi separuh ialah...",
+        options: ["Setengah", "Penuh"],
+        answer: "Setengah",
+        hint: "Setengah bermaksud separa bahagian."
+      },
+      {
+        id: 9,
+        level: "Rendah",
+        graphic: "dacing_senget",
+        type: "mcq",
+        question: "Apabila menimbang, sebelah dacing yang turun ke bawah bermaksud objek itu...",
+        options: ["Berat", "Ringan"],
+        answer: "Berat",
+        hint: "Daya tarikan menolak objek berat ke bawah."
+      },
+      {
+        id: 10,
+        level: "Rendah",
+        graphic: "depa",
+        type: "mcq",
+        question: "Papan hitam diukur menggunakan depa tangan. Ini adalah ukuran...",
+        options: ["Panjang", "Jisim"],
+        answer: "Panjang",
+        hint: "Depa tangan digunakan untuk mengukur jarak atau panjang."
+      },
+
+      // === MEDIUM LEVEL (4 Questions) ===
+      {
+        id: 11,
+        level: "Sederhana",
+        graphic: "timbang_guli",
+        type: "drag",
+        question: "<b>Jisim Buku Merah = 5 guli.<br>Jisim Buku Biru = 8 guli.</b><br>Jisim Buku Merah ________ daripada Buku Biru.",
+        dragOptions: ["kurang", "lebih"],
+        answer: "kurang",
+        hint: "Nombor 5 adalah lebih kecil/kurang daripada 8."
+      },
+      {
+        id: 12,
+        level: "Sederhana",
+        graphic: "sukat_cawan",
+        type: "drag",
+        question: "<b>Bekas A = 3 cawan air.<br>Bekas B = 7 cawan air.</b><br>Isi padu Bekas B adalah ________ daripada Bekas A.",
+        dragOptions: ["lebih banyak", "lebih sedikit"],
+        answer: "lebih banyak",
+        hint: "7 cawan adalah lebih banyak berbanding 3 cawan."
+      },
+      {
+        id: 13,
+        level: "Sederhana",
+        graphic: "pen_pensel",
+        type: "mcq",
+        question: "Panjang Pen = 4 klip kertas. Panjang Pensel = 6 klip kertas. Objek manakah yang <b>LEBIH PANJANG</b>?",
+        options: ["Pensel", "Pen"],
+        answer: "Pensel",
+        hint: "Ukuran 6 klip kertas lebih panjang daripada 4 klip kertas."
+      },
+      {
+        id: 14,
+        level: "Sederhana",
+        graphic: "epal_mangga",
+        type: "drag",
+        question: "<b>Jisim Epal = 2 tin.<br>Jisim Mangga = 3 tin.</b><br>Buah yang <b>lebih ringan</b> ialah ________.",
+        dragOptions: ["Epal", "Mangga"],
+        answer: "Epal",
+        hint: "2 tin kurang berat berbanding 3 tin."
+      },
+
+      // === HIGH LEVEL (1 Question KBAT) ===
+      {
+        id: 15,
+        level: "Tinggi (KBAT)",
+        graphic: "bekas_pensel",
+        type: "mcq",
+        question: "<b>Penyelesaian Masalah KBAT:</b><br>Panjang bekas pensel = 5 pemadam.<br>Panjang pensel Amir = 4 pemadam.<br>Adakah pensel Amir muat disimpan di dalam bekas pensel itu?",
+        options: [
+          "Muat, kerana pensel lebih pendek daripada bekas pensel",
+          "Tidak muat, kerana pensel lebih panjang daripada bekas pensel"
+        ],
+        answer: "Muat, kerana pensel lebih pendek daripada bekas pensel",
+        hint: "Bandingkan saiz 4 pemadam (pensel) dengan 5 pemadam (bekas pensel)."
+      }
+    ];
+
+    // STATE VARIABLES
+    let studentName = "";
+    let studentClass = "";
+    let currentQuestionIndex = 0;
+    let totalScore = 0;
+    let attemptsLeft = 2;
+    let selectedMcqValue = null;
+    let selectedDragValue = null;
+    let allTeacherRecords = [];
+
+    // DOM ELEMENTS
+    const screenRegister = document.getElementById('screen-register');
+    const screenQuiz = document.getElementById('screen-quiz');
+    const screenResult = document.getElementById('screen-result');
+    const screenTeacher = document.getElementById('screen-teacher');
+
+    function startQuiz(e) {
+      e.preventDefault();
+      playSound('click');
+
+      studentName = document.getElementById('student-name').value.trim();
+      studentClass = document.getElementById('student-class').value;
+
+      if (!studentName) return;
+
+      document.getElementById('display-name').textContent = studentName;
+      document.getElementById('display-school-class').textContent = `Kelas: ${studentClass}`;
+
+      screenRegister.classList.add('hidden');
+      screenTeacher.classList.add('hidden');
+      screenQuiz.classList.remove('hidden');
+
+      currentQuestionIndex = 0;
+      totalScore = 0;
+      updateScoreDisplay();
+      loadQuestion();
+    }
+
+    function checkAnswer() {
+      const q = questions[currentQuestionIndex];
+      let userAns = (q.type === 'mcq') ? selectedMcqValue : selectedDragValue;
+
+      if (!userAns) {
+        showCustomNotice("Sila pilih jawapan anda terlebih dahulu! 😊");
+        return;
+      }
+
+      const feedbackBox = document.getElementById('feedback-box');
+      feedbackBox.classList.remove('hidden');
+
+      if (userAns === q.answer) {
+        // Correct Answer
+        playSound('correct');
+        let points = (attemptsLeft === 2) ? 2 : 1;
+        totalScore += points;
+        updateScoreDisplay();
+
+        feedbackBox.className = "mb-6 p-4 rounded-2xl text-lg md:text-xl font-bold text-center bg-emerald-100 text-emerald-900 border-2 border-emerald-400 font-quicksand";
+        feedbackBox.innerHTML = `🎉 SYABAS! Jawapan anda BETUL! (+${points} Markah)`;
+
+        disableInputs();
+        document.getElementById('btn-check').classList.add('hidden');
+        document.getElementById('btn-next').classList.remove('hidden');
+      } else {
+        // Wrong Answer
+        playSound('wrong');
+        attemptsLeft--;
+        if (attemptsLeft === 1) {
+          feedbackBox.className = "mb-6 p-4 rounded-2xl text-base md:text-lg font-bold text-center bg-amber-100 text-amber-900 border-2 border-amber-400 font-quicksand";
+          feedbackBox.innerHTML = `❌ Jawapan kurang tepat.<br>💡 <b>Petunjuk:</b> ${q.hint}<br>Sila cuba lagi (Cubaan ke-2 = 1 Markah).`;
+        } else {
+          feedbackBox.className = "mb-6 p-4 rounded-2xl text-base md:text-lg font-bold text-center bg-red-100 text-red-900 border-2 border-red-400 font-quicksand";
+          feedbackBox.innerHTML = `❌ Cubaan tamat (0 Markah).<br>Jawapan sebenar ialah: <b>${q.answer}</b>`;
+
+          disableInputs();
+          document.getElementById('btn-check').classList.add('hidden');
+          document.getElementById('btn-next').classList.remove('hidden');
+        }
+      }
+    }
+
+    function showResults() {
+      playSound('win');
+      screenQuiz.classList.add('hidden');
+      screenResult.classList.remove('hidden');
+
+      const todayFormatted = new Date().toLocaleDateString('ms-MY', { year: 'numeric', month: 'long', day: 'numeric' });
+      const timeStampStr = new Date().toLocaleString('ms-MY');
+
+      document.getElementById('res-name').textContent = studentName;
+      document.getElementById('res-school-class').textContent = studentClass;
+      document.getElementById('res-date').textContent = todayFormatted;
+      document.getElementById('res-score').textContent = totalScore;
+
+      let gradeTitle = "";
+      const gradeElem = document.getElementById('res-grade');
+      if (totalScore >= 26) {
+        gradeTitle = "🏆 TAHAP PENGUASAAN 6: CEMERLANG!";
+      } else if (totalScore >= 20) {
+        gradeTitle = "🌟 TAHAP PENGUASAAN 5: SANGAT BAIK!";
+      } else if (totalScore >= 14) {
+        gradeTitle = "👍 TAHAP PENGUASAAN 4: BAIK!";
+      } else {
+        gradeTitle = "💪 TAHAP PENGUASAAN 3: MEMUASKAN!";
+      }
+      gradeElem.textContent = gradeTitle;
+
+      // AUTOMATICALLY SAVE TO FIRESTORE CLOUD DATABASE
+      if (window.saveQuizResultToCloud) {
+        window.saveQuizResultToCloud({
+          studentName: studentName,
+          studentClass: studentClass,
+          score: totalScore,
+          maxScore: 30,
+          grade: gradeTitle,
+          submittedAt: timeStampStr
+        });
+      }
+    }
+
+    // --- TEACHER DASHBOARD LOGIC ---
+    function openTeacherDashboard() {
+      playSound('click');
+      document.getElementById('input-teacher-pin').value = '';
+      document.getElementById('pin-error-msg').classList.add('hidden');
+      document.getElementById('modal-teacher-pass').classList.remove('hidden');
+    }
+
+    function closePinModal() {
+      document.getElementById('modal-teacher-pass').classList.add('hidden');
+    }
+
+    function verifyTeacherPin() {
+      const pin = document.getElementById('input-teacher-pin').value;
+      if (pin === "1234") { // Default PIN: 1234
+        closePinModal();
+        screenRegister.classList.add('hidden');
+        screenQuiz.classList.add('hidden');
+        screenResult.classList.add('hidden');
+        screenTeacher.classList.remove('hidden');
+
+        // Subscribe to real-time data
+        if (window.subscribeToQuizResults) {
+          window.subscribeToQuizResults((data) => {
+            allTeacherRecords = data;
+            renderTeacherTable();
+          });
+        }
+      } else {
+        document.getElementById('pin-error-msg').classList.remove('hidden');
+      }
+    }
+
+    function closeTeacherDashboard() {
+      playSound('click');
+      screenTeacher.classList.add('hidden');
+      screenRegister.classList.remove('hidden');
+    }
+
+    function renderTeacherTable() {
+      const tbody = document.getElementById('teacher-table-body');
+      const searchQuery = document.getElementById('teacher-search').value.toLowerCase();
+      const filterClass = document.getElementById('teacher-filter-class').value;
+
+      let filtered = allTeacherRecords.filter(item => {
+        const matchesName = (item.studentName || '').toLowerCase().includes(searchQuery);
+        const matchesClass = (filterClass === 'ALL') || (item.studentClass === filterClass);
+        return matchesName && matchesClass;
+      });
+
+      // Update Statistics
+      const totalCount = filtered.length;
+      document.getElementById('teacher-stat-count').textContent = totalCount;
+
+      if (totalCount > 0) {
+        const sumScore = filtered.reduce((acc, curr) => acc + (curr.score || 0), 0);
+        const avgScore = (sumScore / totalCount).toFixed(1);
+        document.getElementById('teacher-stat-avg').textContent = `${avgScore} / 30`;
+
+        const passedCount = filtered.filter(item => (item.score || 0) >= 14).length;
+        const passRate = Math.round((passedCount / totalCount) * 100);
+        document.getElementById('teacher-stat-pass').textContent = `${passRate}%`;
+      } else {
+        document.getElementById('teacher-stat-avg').textContent = `0 / 30`;
+        document.getElementById('teacher-stat-pass').textContent = `0%`;
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400 font-bold">Tiada rekod respons dijumpai.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      filtered.forEach((rec, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-purple-50/50 transition";
+        
+        const dateStr = rec.submittedAt || (rec.createdAt ? new Date(rec.createdAt).toLocaleString('ms-MY') : '-');
+
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-gray-400">${idx + 1}</td>
+          <td class="p-3 font-bold text-purple-950">${rec.studentName || '-'}</td>
+          <td class="p-3"><span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-lg text-xs font-bold">${rec.studentClass || '-'}</span></td>
+          <td class="p-3 text-center"><span class="font-extrabold text-amber-600 text-lg">${rec.score || 0}</span> <span class="text-xs text-gray-400">/30</span></td>
+          <td class="p-3 text-xs text-gray-500">${dateStr}</td>
+          <td class="p-3 text-center">
+            <button onclick="handleDeleteRecord('${rec.id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-xl transition" title="Padam Rekod">
+              🗑️
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleDeleteRecord(recordId) {
+      if (window.deleteQuizRecord) {
+        window.deleteQuizRecord(recordId);
+      }
+    }
+
+    function showCustomNotice(msg) {
+      const feedbackBox = document.getElementById('feedback-box');
+      feedbackBox.classList.remove('hidden');
+      feedbackBox.className = "mb-6 p-4 rounded-2xl text-base md:text-lg font-bold text-center bg-amber-100 text-amber-900 border-2 border-amber-400 font-quicksand animate-pulse";
+      feedbackBox.innerHTML = msg;
+      setTimeout(() => feedbackBox.classList.add('hidden'), 3000);
+    }
+
+    function disableInputs() {
+      document.querySelectorAll('.mcq-option').forEach(btn => btn.disabled = true);
+      document.querySelectorAll('.draggable').forEach(btn => btn.disabled = true);
+    }
+
+    function updateScoreDisplay() {
+      document.getElementById('score').textContent = totalScore;
+    }
+
+    function nextQuestion() {
+      playSound('click');
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex < questions.length) {
+        loadQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function restartQuiz() {
+      playSound('click');
+      screenResult.classList.add('hidden');
+      screenTeacher.classList.add('hidden');
+      screenRegister.classList.remove('hidden');
+      document.getElementById('student-name').value = '';
+    }
+  </script>
+</body>
+</html>
