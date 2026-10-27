@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz Matematik Tahun 1: Panjang, Jisim & Isi Padu Cecair</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Style -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background-color: #f0fdf4;
+        }
+        .comic-font {
+            font-family: 'Comic Neue', cursive;
+        }
+        .btn-bounce {
+            transition: transform 0.1s ease-in-out;
+        }
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="bg-amber-400 border-b-4 border-amber-500 p-4 text-center shadow-lg">
+        <h1 class="text-3xl md:text-5xl font-extrabold text-amber-900 tracking-wide">
+            📐 KUIZ MATEMATIK TAHUN 1 🧪
+        </h1>
+        <p class="text-lg md:text-xl font-bold text-amber-800 mt-1">
+            Tajuk: Panjang, Jisim & Isi Padu Cecair
+        </p>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container mx-auto max-w-3xl p-4 flex-grow flex items-center justify-center">
+        
+        <!-- STEP 1: BORANG DAFTAR MURID -->
+        <div id="step-register" class="w-full bg-white rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-teal-400">
+            <h2 class="text-2xl md:text-3xl font-bold text-teal-700 text-center mb-6">
+                Selamat Datang, Wira Matematik! 🌟
+            </h2>
+            <form id="form-user" onsubmit="startQuiz(event)" class="space-y-5">
+                <div>
+                    <label class="block text-xl font-bold text-teal-800 mb-2" for="student-name">
+                        👤 Nama Murid:
+                    </label>
+                    <input type="text" id="student-name" required placeholder="Masukkan nama kamu..."
+                        class="w-full text-xl md:text-2xl p-4 rounded-2xl border-4 border-teal-300 focus:border-teal-500 focus:outline-none bg-teal-50">
+                </div>
+                <div>
+                    <label class="block text-xl font-bold text-teal-800 mb-2" for="student-class">
+                        🏫 Kelas:
+                    </label>
+                    <input type="text" id="student-class" required placeholder="Contoh: 1 Cemerlang"
+                        class="w-full text-xl md:text-2xl p-4 rounded-2xl border-4 border-teal-300 focus:border-teal-500 focus:outline-none bg-teal-50">
+                </div>
+                <div>
+                    <label class="block text-lg font-bold text-slate-600 mb-1" for="sheet-url">
+                        🔗 Link Google Web App (Google Sheet integration):
+                    </label>
+                    <input type="url" id="sheet-url" placeholder="https://script.google.com/macros/s/.../exec"
+                        class="w-full text-sm p-3 rounded-xl border-2 border-slate-300 focus:outline-none">
+                    <p class="text-xs text-slate-500 mt-1">*Boleh dibiarkan kosong jika tidak mahu simpan ke Google Sheet.</p>
+                </div>
+                <button type="submit" 
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-2xl md:text-3xl font-bold py-4 rounded-2xl border-b-8 border-emerald-700 shadow-xl btn-bounce mt-4">
+                    🚀 MULA KUIZ SEKARANG!
+                </button>
+            </form>
+        </div>
+
+        <!-- STEP 2: SKRIN KUIZ -->
+        <div id="step-quiz" class="hidden w-full bg-white rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-amber-400">
+            <!-- Header Kuiz (Maklumat Status) -->
+            <div class="flex flex-wrap justify-between items-center border-b-4 border-amber-200 pb-4 mb-4 gap-2">
+                <div class="text-lg md:text-xl font-bold text-slate-700">
+                    Soalan: <span id="q-num" class="text-amber-600 text-2xl md:text-3xl">1</span> / 15
+                </div>
+                <div id="badge-level" class="px-3 py-1 bg-sky-100 text-sky-800 rounded-full font-bold text-sm md:text-base border border-sky-300">
+                    Aras Rendah
+                </div>
+                <div class="text-lg md:text-xl font-bold text-slate-700">
+                    Markah: <span id="current-score" class="text-emerald-600 text-2xl md:text-3xl">0</span>
+                </div>
+            </div>
+
+            <!-- Petunjuk Percubaan -->
+            <div id="try-indicator" class="text-center text-lg md:text-xl font-bold text-purple-700 mb-4 bg-purple-50 p-2 rounded-xl border-2 border-purple-200">
+                Percubaan Pertama (Betul = 2 Markah) 🎯
+            </div>
+
+            <!-- Soalan Text & Audio Button -->
+            <div class="mb-6 bg-amber-50 p-4 md:p-6 rounded-2xl border-2 border-amber-200">
+                <div class="flex items-start justify-between gap-3">
+                    <h3 id="question-text" class="text-2xl md:text-3xl font-extrabold text-slate-800 leading-snug">
+                        Soalan akan dipaparkan di sini...
+                    </h3>
+                    <button onclick="readQuestion()" title="Baca Soalan" class="bg-amber-400 hover:bg-amber-500 text-amber-900 p-3 rounded-2xl font-bold shadow-md btn-bounce shrink-0">
+                        🔊
+                    </button>
+                </div>
+            </div>
+
+            <!-- Visual / Gambar Grafik Pembantu (Emoji / Skematik) -->
+            <div id="question-visual" class="text-center text-5xl md:text-6xl mb-6 p-4 bg-slate-50 rounded-2xl border-2 border-slate-200 min-h-[90px] flex items-center justify-center">
+                📏
+            </div>
+
+            <!-- Pilihan Jawapan -->
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Option buttons generated by JS -->
+            </div>
+
+            <!-- Mesej Maklum Balas -->
+            <div id="feedback-msg" class="hidden mt-6 text-center text-2xl font-bold p-4 rounded-2xl">
+            </div>
+
+            <!-- Butang Seterusnya (Muncul selepas habis percubaan/betul) -->
+            <button id="btn-next" onclick="nextQuestion()" class="hidden w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold py-4 rounded-2xl border-b-8 border-blue-700 shadow-xl btn-bounce">
+                SOALAN SETERUSNYA ➡️
+            </button>
+        </div>
+
+        <!-- STEP 3: KEPUTUSAN KUIZ -->
+        <div id="step-result" class="hidden w-full bg-white rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-emerald-400 text-center">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-emerald-600 mb-2">
+                🎉 TAHNIAH! KUIZ SELESAI 🎉
+            </h2>
+            <p class="text-xl text-slate-600 mb-6">Syabas wira kerana telah berusaha dengan bersungguh-sungguh!</p>
+
+            <!-- Kad Skor -->
+            <div class="bg-emerald-50 rounded-2xl p-6 border-4 border-emerald-200 mb-6 space-y-3">
+                <div class="text-2xl font-bold text-slate-700">Nama: <span id="res-name" class="text-emerald-700"></span></div>
+                <div class="text-xl font-bold text-slate-600">Kelas: <span id="res-class" class="text-slate-800"></span></div>
+                <div class="text-4xl md:text-5xl font-black text-amber-600 my-4">
+                    JUMLAH MARKAH:<br>
+                    <span id="res-score" class="text-emerald-600">0</span> / 30
+                </div>
+                <div id="res-status" class="text-lg font-bold text-slate-500">
+                    Menghantar data ke Google Sheet... ⏳
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full bg-amber-500 hover:bg-amber-600 text-white text-2xl font-bold py-4 rounded-2xl border-b-8 border-amber-700 shadow-xl btn-bounce">
+                🔄 CUBA LAGI
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center p-4 text-slate-600 font-bold bg-amber-100 border-t-2 border-amber-200">
+        Berdasarkan Buku Teks Matematik Tahun 1 SK (Jilid 2 - Tajuk 6)
+    </footer>
+
+    <!-- LOGIK KUIZ -->
+    <script>
+        // Data 15 Soalan (10 Aras Rendah, 4 Aras Sederhana, 1 Aras Tinggi)
+        const questions = [
+            // --- ARAS RENDAH (10 SOALAN) ---
+            {
+                level: "Aras Rendah",
+                question: "Pokok pinang itu ______, manakala pokok palma itu rendah.",
+                options: ["tinggi", "panjang", "pendek", "dekat"],
+                answer: 0,
+                visual: "🌴 (Tinggi) vs 🪴 (Rendah)",
+                hint: "Fikirkan tentang ketinggian pokok pinang!"
+            },
+            {
+                level: "Aras Rendah",
+                question: "Buluh A panjang. Buluh B ______.",
+                options: ["pendek", "tinggi", "berat", "banyak"],
+                answer: 0,
+                visual: "🥢 Buluh A vs Buluh B",
+                hint: "Lawan bagi perkataan panjang ialah..."
+            },
+            {
+                level: "Aras Rendah",
+                question: "Tong gas ini ______. Saya perlu bawa guna troli.",
+                options: ["berat", "ringan", "panjang", "sedikit"],
+                answer: 0,
+                visual: "🛢️ Tong Gas",
+                hint: "Objek yang sukar diangkat oleh budak sekolah ialah..."
+            },
+            {
+                level: "Aras Rendah",
+                question: "Kotak tisu ini ______. Saya boleh angkat dengan mudah.",
+                options: ["ringan", "berat", "tinggi", "penuh"],
+                answer: 0,
+                visual: "🧻 Kotak Tisu",
+                hint: "Objek yang senang diangkat."
+            },
+            {
+                level: "Aras Rendah",
+                question: "Air di dalam jug itu ______, tiada ruang kosong lagi.",
+                options: ["penuh", "sedikit", "separuh", "suku"],
+                answer: 0,
+                visual: "🥛 (Air hingga ke bibir gelas)",
+                hint: "Air yang diisi sehingga ke atas bekas."
+            },
+            {
+                level: "Aras Rendah",
+                question: "Jus jambu di dalam teko itu tinggal ______.",
+                options: ["sedikit", "penuh", "banyak", "berat"],
+                answer: 0,
+                visual: "☕ (Air di bahagian dasar sahaja)",
+                hint: "Kuantiti cecair yang sangat asas di dasar."
+            },
+            {
+                level: "Aras Rendah",
+                question: "Rumah Ali ______ dengan sekolah, dia hanya jalan kaki.",
+                options: ["dekat", "jauh", "tinggi", "berat"],
+                answer: 0,
+                visual: "🏠 🚶 🏫",
+                hint: "Jarak yang mengambil masa singkat untuk sampai."
+            },
+            {
+                level: "Aras Rendah",
+                question: "Kereta api itu ______ berbanding bas.",
+                options: ["lebih panjang", "lebih pendek", "lebih ringan", "lebih rendah"],
+                answer: 0,
+                visual: "🚂 (Kereta Api Panjang)",
+                hint: "Gerabak kereta api ada banyak."
+            },
+            {
+                level: "Aras Rendah",
+                question: "Jus oren dan jus anggur tinggal ______ jug.",
+                options: ["setengah", "penuh", "sedikit", "berat"],
+                answer: 0,
+                visual: "🥤 (Cecair di paras separuh)",
+                hint: "Paras cecair tepat di tengah-tengah bekas."
+            },
+            {
+                level: "Aras Rendah",
+                question: "Manakah antara objek berikut yang paling RINGAN?",
+                options: ["Klip kertas", "Buku teks", "Kerusi kayu", "Beg sekolah"],
+                answer: 0,
+                visual: "📎 vs 📚 vs 🪑",
+                hint: "Objek kecil yang paling mudah diterbangkan angin."
+            },
+
+            // --- ARAS SEDERHANA (4 SOALAN) ---
+            {
+                level: "Aras Sederhana",
+                question: "Panjang meja sama dengan 5 jengkal Kaswini. Mengapa ukuran jengkal Amni ialah 6 jengkal?",
+                options: [
+                    "Saiz jengkal Amni lebih kecil",
+                    "Meja itu menjadi lebih panjang",
+                    "Amni guna pembaris",
+                    "Kaswini salah kira"
+                ],
+                answer: 0,
+                visual: "🖐️ Jengkal Tangan",
+                hint: "Tangan kanak-kanak mempunyai saiz yang berbeza!"
+            },
+            {
+                level: "Aras Sederhana",
+                question: "Jisim buku merah sama dengan 5 guli. Jisim buku biru sama dengan 8 guli. Buku manakah lebih BERAT?",
+                options: ["Buku biru", "Buku merah", "Kedua-duanya sama", "Guli"],
+                answer: 0,
+                visual: "📕 = 5 🔮 | 📘 = 8 🔮",
+                hint: "Bilangan guli yang lebih banyak bermaksud lebih..."
+            },
+            {
+                level: "Aras Sederhana",
+                question: "Isi padu teko sama dengan 5 cawan air. Isi padu jug sama dengan 7 cawan air. Bekas manakah mempunyai isi padu LEBIH BANYAK?",
+                options: ["Jug", "Teko", "Cawan", "Kedua-duanya sama"],
+                answer: 0,
+                visual: "🫖 (5 cawan) vs 🏺 (7 cawan)",
+                hint: "Bandingkan 7 cawan dengan 5 cawan."
+            },
+            {
+                level: "Aras Sederhana",
+                question: "Panjang pen sama dengan 4 klip kertas. Panjang pensel sama dengan 6 klip kertas. Pen adalah ______ daripada pensel.",
+                options: ["lebih pendek", "lebih panjang", "sama panjang", "lebih tinggi"],
+                answer: 0,
+                visual: "🖊️ (4 klip) vs ✏️ (6 klip)",
+                hint: "4 klip kertas adalah kurang daripada 6 klip kertas."
+            },
+
+            // --- ARAS TINGGI / KBAT (1 SOALAN) ---
+            {
+                level: "Aras Tinggi (KBAT)",
+                question: "Panjang bekas pensel Amin ialah 5 klip kertas. Panjang pensel Amin ialah 4 klip kertas. Adakah pensel itu boleh disimpan di dalam bekas penselnya?",
+                options: [
+                    "Boleh, kerana pensel lebih pendek daripada bekas pensel",
+                    "Tidak boleh, kerana pensel lebih panjang",
+                    "Tidak boleh, kerana bekas pensel lebih kecil",
+                    "Boleh, kerana kedua-duanya sama panjang"
+                ],
+                answer: 0,
+                visual: "👝 (5 klip) & ✏️ (4 klip)",
+                hint: "Bandingkan saiz pensel (4) dengan bekas (5)."
+            }
+        ];
+
+        // State Variabel
+        let studentName = "";
+        let studentClass = "";
+        let googleSheetUrl = "";
+        let currentQIndex = 0;
+        let score = 0;
+        let attemptsLeft = 2; // Maximum 2 attempts per question
+
+        function startQuiz(e) {
+            e.preventDefault();
+            studentName = document.getElementById('student-name').value.trim();
+            studentClass = document.getElementById('student-class').value.trim();
+            googleSheetUrl = document.getElementById('sheet-url').value.trim();
+
+            document.getElementById('step-register').classList.add('hidden');
+            document.getElementById('step-quiz').classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            attemptsLeft = 2;
+            const q = questions[currentQIndex];
+
+            // Update Header Status
+            document.getElementById('q-num').innerText = currentQIndex + 1;
+            document.getElementById('badge-level').innerText = q.level;
+            document.getElementById('question-text').innerText = q.question;
+            document.getElementById('question-visual').innerText = q.visual;
+            document.getElementById('try-indicator').innerHTML = "Percubaan Pertama (Betul = 2 Markah) 🎯";
+            document.getElementById('try-indicator').className = "text-center text-lg md:text-xl font-bold text-purple-700 mb-4 bg-purple-50 p-2 rounded-xl border-2 border-purple-200";
+
+            // Reset UI feedback & button
+            document.getElementById('feedback-msg').className = "hidden mt-6 text-center text-2xl font-bold p-4 rounded-2xl";
+            document.getElementById('btn-next').classList.add('hidden');
+
+            // Render Options
+            const container = document.getElementById('options-container');
+            container.innerHTML = "";
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full bg-slate-100 hover:bg-amber-100 text-slate-800 text-xl md:text-2xl font-bold p-4 md:p-5 rounded-2xl border-4 border-slate-300 text-left transition shadow-md btn-bounce option-btn";
+                btn.innerHTML = `<span class="inline-block w-8 h-8 text-center bg-amber-400 text-amber-900 rounded-full text-lg mr-2">${String.fromCharCode(65 + idx)}</span> ${opt}`;
+                btn.onclick = () => checkAnswer(idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function readQuestion() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop current speech
+                const qText = questions[currentQIndex].question;
+                const utterance = new SpeechSynthesisUtterance(qText);
+                utterance.lang = 'ms-MY'; // Bahasa Melayu
+                utterance.rate = 0.85; // Agak perlahan untuk murid Tahun 1
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("Fungsi suara tidak disokong pada pelayar ini.");
+            }
+        }
+
+        function checkAnswer(selectedIndex) {
+            const q = questions[currentQIndex];
+            const feedbackEl = document.getElementById('feedback-msg');
+            const optionBtns = document.querySelectorAll('.option-btn');
+
+            if (selectedIndex === q.answer) {
+                // Jawapan Betul
+                let earnedScore = (attemptsLeft === 2) ? 2 : 1;
+                score += earnedScore;
+                document.getElementById('current-score').innerText = score;
+
+                // Disable all option buttons
+                optionBtns.forEach(btn => btn.disabled = true);
+                optionBtns[selectedIndex].classList.replace('bg-slate-100', 'bg-emerald-200');
+                optionBtns[selectedIndex].classList.replace('border-slate-300', 'border-emerald-500');
+
+                feedbackEl.innerText = (attemptsLeft === 2) 
+                    ? `🎉 BETUL! (+2 Markah)` 
+                    : `👍 BETUL pada percubaan kedua! (+1 Markah)`;
+                feedbackEl.className = "mt-6 text-center text-2xl font-bold p-4 rounded-2xl bg-emerald-100 text-emerald-800 border-2 border-emerald-400 block";
+
+                document.getElementById('btn-next').classList.remove('hidden');
+
+            } else {
+                // Jawapan Salah
+                attemptsLeft--;
+
+                if (attemptsLeft === 1) {
+                    // Masih ada 1 percubaan
+                    optionBtns[selectedIndex].disabled = true;
+                    optionBtns[selectedIndex].classList.replace('bg-slate-100', 'bg-rose-100');
+                    optionBtns[selectedIndex].classList.replace('border-slate-300', 'border-rose-400');
+
+                    document.getElementById('try-indicator').innerHTML = "⚠️ Percubaan Kedua! Cuba lagi (Betul = 1 Markah)";
+                    document.getElementById('try-indicator').className = "text-center text-lg md:text-xl font-bold text-orange-700 mb-4 bg-orange-50 p-2 rounded-xl border-2 border-orange-200";
+
+                    feedbackEl.innerText = `❌ Jawapan kurang tepat. Petunjuk: ${q.hint}`;
+                    feedbackEl.className = "mt-6 text-center text-xl font-bold p-4 rounded-2xl bg-rose-100 text-rose-800 border-2 border-rose-400 block";
+                } else {
+                    // Percubaan habis (0 markah)
+                    optionBtns.forEach(btn => btn.disabled = true);
+                    optionBtns[selectedIndex].classList.replace('bg-slate-100', 'bg-rose-200');
+
+                    // Highlight jawapan betul
+                    optionBtns[q.answer].classList.replace('bg-slate-100', 'bg-emerald-200');
+
+                    feedbackEl.innerText = `❌ Salah! Jawapan betul ialah: ${q.options[q.answer]}`;
+                    feedbackEl.className = "mt-6 text-center text-xl font-bold p-4 rounded-2xl bg-rose-100 text-rose-800 border-2 border-rose-400 block";
+
+                    document.getElementById('btn-next').classList.remove('hidden');
+                }
+            }
+        }
+
+        function nextQuestion() {
+            currentQIndex++;
+            if (currentQIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('step-quiz').classList.add('hidden');
+            document.getElementById('step-result').classList.remove('hidden');
+
+            document.getElementById('res-name').innerText = studentName;
+            document.getElementById('res-class').innerText = studentClass;
+            document.getElementById('res-score').innerText = score;
+
+            // Hantar data ke Google Sheet jika URL disediakan
+            if (googleSheetUrl) {
+                sendDataToGoogleSheet();
+            } else {
+                document.getElementById('res-status').innerText = "ℹ️ Data tidak dihantar ke Google Sheet (Link Web App tiada).";
+            }
+        }
+
+        function sendDataToGoogleSheet() {
+            const payload = {
+                nama: studentName,
+                kelas: studentClass,
+                skor: score,
+                peratus: Math.round((score / 30) * 100) + "%",
+                tarikh: new Date().toLocaleString('ms-MY')
+            };
+
+            fetch(googleSheetUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                document.getElementById('res-status').innerText = "✅ Keputusan berjaya disimpan ke Google Sheet!";
+                document.getElementById('res-status').className = "text-lg font-bold text-emerald-600";
+            })
+            .catch(err => {
+                document.getElementById('res-status').innerText = "❌ Gagal menyimpan data ke Google Sheet.";
+                document.getElementById('res-status').className = "text-lg font-bold text-rose-600";
+            });
+        }
+    </script>
+</body>
+</html>
+```eof
+
+---
+
+### 📝 Arahan Penyediaan Google Sheet (Penghantaran Data Respon):
+
+Untuk membolehkan jawapan dan markah murid disimpan ke Google Sheet secara automatik, guru boleh mengikut langkah ringkas ini:
+
+1. Buka [Google Sheets](https://sheets.google.com) dan cipta fail baharu.
+2. Di baris pertama (Header), tuliskan tajuk kolum: 
+   - **A1**: `Tarikh` | **B1**: `Nama` | **C1**: `Kelas` | **D1**: `Skor` | **E1**: `Peratus`
+3. Klik menu **Extensions** > **Apps Script**.
+4. Padam kod asal dan tampalkan Skrip Apps Script berikut:
+
+```javascript
+function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  
+  sheet.appendRow([
+    data.tarikh,
+    data.nama,
+    data.kelas,
+    data.skor,
+    data.peratus
+  ]);
+  
+  return ContentService.createTextOutput("Success");
+}
