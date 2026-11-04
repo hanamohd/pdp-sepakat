@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuiz Kem Bestari Solat - Tahiyyat & Salam</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #a8edd9 0%, #fed6e3 100%);
+    }
+    .font-heading {
+      font-family: 'Fredoka One', cursive;
+    }
+    .arabic-text {
+      font-family: 'Traditional Arabic', 'Amiri', 'Meaney', serif;
+      font-size: 2rem;
+      line-height: 2.8rem;
+      direction: rtl;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <!-- Main Container -->
+  <div id="app" class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border-4 border-yellow-300 p-6 md:p-8 text-center relative overflow-hidden">
+    
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="space-y-6">
+      <div class="inline-block bg-yellow-100 text-yellow-800 text-sm font-bold px-4 py-1.5 rounded-full border border-yellow-300 mb-2">
+        ✨ Kem Bestari Solat Tahap 1 ✨
+      </div>
+      <h1 class="text-4xl md:text-5xl font-heading text-emerald-600 tracking-wide leading-tight">
+        KUIZ TAHIYYAT & SALAM 🤲
+      </h1>
+      <p class="text-xl md:text-2xl font-bold text-purple-700">
+        Jom uji pengetahuan anda tentang bacaan Tahiyyat Awal, Tahiyyat Akhir & Salam!
+      </p>
+      
+      <div class="my-6 p-4 bg-emerald-50 rounded-2xl border-2 border-emerald-200">
+        <p class="text-lg font-bold text-emerald-800">Jumlah Soalan: 10 Soalan</p>
+        <p class="text-md text-emerald-600 font-bold">Pilih jawapan yang betul dan kumpul markah penuh! 🌟</p>
+      </div>
+
+      <button onclick="startQuiz()" class="w-full py-5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-heading text-2xl md:text-3xl rounded-2xl shadow-lg border-b-4 border-emerald-700 transition duration-150">
+        MULA KUIZ SEKARANG 🚀
+      </button>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="hidden space-y-6">
+      <!-- Header Progress & Score -->
+      <div class="flex justify-between items-center bg-purple-100 px-5 py-3 rounded-2xl border border-purple-200">
+        <span id="question-number" class="text-lg md:text-xl font-bold text-purple-800">Soalan 1/10</span>
+        <span id="score-display" class="text-lg md:text-xl font-bold text-emerald-700">Markah: 0</span>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden border border-gray-300">
+        <div id="progress-bar" class="bg-yellow-400 h-full transition-all duration-300" style="width: 10%;"></div>
+      </div>
+
+      <!-- Question Box -->
+      <div class="bg-blue-50 border-4 border-blue-200 p-5 md:p-6 rounded-3xl min-h-[140px] flex flex-col justify-center items-center shadow-inner">
+        <h2 id="question-text" class="text-2xl md:text-3xl font-bold text-blue-900 leading-snug">
+          <!-- Text soalan -->
+        </h2>
+        <div id="arabic-subtext" class="arabic-text text-emerald-700 mt-2 font-bold hidden"></div>
+      </div>
+
+      <!-- Answer Options Grid -->
+      <div id="options-container" class="grid grid-cols-1 gap-4">
+        <!-- Pilihan jawapan diisi melalui JavaScript -->
+      </div>
+
+      <!-- Explanation / Feedback Box -->
+      <div id="feedback-box" class="hidden p-4 rounded-2xl text-left border-2 animate-bounce-short">
+        <p id="feedback-title" class="font-heading text-xl mb-1"></p>
+        <p id="feedback-text" class="text-lg font-semibold"></p>
+      </div>
+
+      <!-- Next Button -->
+      <button id="next-btn" onclick="nextQuestion()" class="hidden w-full py-4 bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-heading text-2xl rounded-2xl shadow-md border-b-4 border-blue-700 transition">
+        SOALAN SETERUSNYA ➔
+      </button>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="hidden space-y-6">
+      <div class="text-6xl mb-2" id="result-icon">🏆</div>
+      <h2 class="text-3xl md:text-4xl font-heading text-purple-800">TAHNIAH! ANDA DAH SELESAI!</h2>
+      
+      <div class="bg-yellow-50 border-4 border-yellow-300 p-6 rounded-3xl space-y-3">
+        <p class="text-xl font-bold text-gray-700">Keputusan Anda:</p>
+        <p id="final-score" class="text-5xl font-heading text-emerald-600">0 / 10</p>
+        <p id="result-message" class="text-xl font-bold text-purple-700 mt-2"></p>
+      </div>
+
+      <button onclick="resetQuiz()" class="w-full py-5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-heading text-2xl rounded-2xl shadow-lg border-b-4 border-emerald-700 transition">
+        CUBA LAGI 🔄
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "Apakah hukum membaca Tahiyyat Akhir dalam solat?",
+        arabic: "",
+        options: [
+          { text: "Rukun Solat (Wajib)", isCorrect: true, rationale: "Tahiyyat Akhir adalah rukun solat (Rukun Qauli) yang wajib dibaca." },
+          { text: "Sunat Sahaja", isCorrect: false, rationale: "Tahiyyat Akhir adalah rukun, bukan sekadar sunat." },
+          { text: "Harus", isCorrect: false, rationale: "Membaca Tahiyyat Akhir adalah wajib dalam solat." },
+          { text: "Makruh", isCorrect: false, rationale: "Tahiyyat Akhir adalah rukun solat yang wajib dipenuhi." }
+        ]
+      },
+      {
+        question: "Apakah hukum membaca Tahiyyat Awal dalam solat?",
+        arabic: "",
+        options: [
+          { text: "Sunat Ab'ad", isCorrect: true, rationale: "Tahiyyat Awal adalah sunat ab'ad. Jika tertinggal, diganti dengan sujud sahwi." },
+          { text: "Rukun Wajib", isCorrect: false, rationale: "Rukun wajib ialah Tahiyyat Akhir, manakala Tahiyyat Awal adalah sunat ab'ad." },
+          { text: "Harus", isCorrect: false, rationale: "Tahiyyat Awal dituntut dan merupakan sunat ab'ad." },
+          { text: "Haram", isCorrect: false, rationale: "Tahiyyat Awal adalah sunat ab'ad yang digalakkan." }
+        ]
+      },
+      {
+        question: "Dalam bacaan Tahiyyat Awal, kita membaca selawat ke atas siapa?",
+        arabic: "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ",
+        options: [
+          { text: "Nabi Muhammad SAW", isCorrect: true, rationale: "Dalam Tahiyyat Awal, kita berselawat ke atas Nabi Muhammad SAW sahaja." },
+          { text: "Nabi Ibrahim AS sahaja", isCorrect: false, rationale: "Selawat utama ditiupkan untuk Nabi Muhammad SAW." },
+          { text: "Nabi Adam AS", isCorrect: false, rationale: "Selawat dalam tahiyyat adalah khusus untuk Nabi Muhammad SAW." },
+          { text: "Nabi Musa AS", isCorrect: false, rationale: "Selawat diajarkan khas untuk Nabi Muhammad SAW." }
+        ]
+      },
+      {
+        question: "Apakah perbezaan utama bacaan Tahiyyat Akhir berbanding Tahiyyat Awal?",
+        arabic: "",
+        options: [
+          { text: "Ada selawat ke atas keluarga Nabi Ibrahim AS", isCorrect: true, rationale: "Tahiyyat Akhir menambah selawat ke atas Nabi Ibrahim AS dan keluarganya." },
+          { text: "Tiada selawat langsung", isCorrect: false, rationale: "Kedua-dua tahiyyat mempunyai selawat." },
+          { text: "Dibaca secara kuat", isCorrect: false, rationale: "Kedua-duanya dibaca secara perlahan (perlahankan suara)." },
+          { text: "Dibaca ketika berdiri", isCorrect: false, rationale: "Tahiyyat dibaca dalam keadaan duduk." }
+        ]
+      },
+      {
+        question: "Semasa membaca 'As-Salamu 'Alaika Ayyuhan-Nabiyyu', kita sedang memberi salam kepada siapa?",
+        arabic: "السَّلاَمُ عَلَيْكَ أَيُّهَا النَّبِيُّ",
+        options: [
+          { text: "Nabi Muhammad SAW", isCorrect: true, rationale: "Kalimat ini bermaksud 'Kesejahteraan ke atasmu wahai Nabi (Nabi Muhammad SAW)'." },
+          { text: "Malaikat Jibril AS", isCorrect: false, rationale: "Potongan bacaan ini khusus memberi salam kepada Nabi Muhammad SAW." },
+          { text: "Kawan sebelah", isCorrect: false, rationale: "Lafaz ini ditujukan khas buat Rasulullah SAW." },
+          { text: "Diri sendiri sahaja", isCorrect: false, rationale: "Lafaz ini adalah salam khusus kepada Nabi Muhammad SAW." }
+        ]
+      },
+      {
+        question: "Salam yang manakah merupakan RUKUN SOLAT?",
+        arabic: "",
+        options: [
+          { text: "Salam Pertama (ke kanan)", isCorrect: true, rationale: "Salam pertama ke kanan adalah rukun solat (Rukun Qauli)." },
+          { text: "Salam Kedua (ke kiri)", isCorrect: false, rationale: "Salam kedua berpaling ke kiri hukumnya sunat." },
+          { text: "Kedua-dua salam", isCorrect: false, rationale: "Hanya salam pertama yang menjadi Rukun Solat." },
+          { text: "Salam ke atas dan bawah", isCorrect: false, rationale: "Salam hanya berpaling ke kanan dan ke kiri." }
+        ]
+      },
+      {
+        question: "Apakah hukum memberi salam KEDUA (berpaling ke kiri)?",
+        arabic: "",
+        options: [
+          { text: "Sunat", isCorrect: true, rationale: "Salam kedua ke arah kiri adalah amalan sunat." },
+          { text: "Rukun Wajib", isCorrect: false, rationale: "Rukun wajib hanya pada salam yang pertama." },
+          { text: "Haram", isCorrect: false, rationale: "Salam kedua adalah sunat yang menambah pahala solat." },
+          { text: "Makruh", isCorrect: false, rationale: "Memberi salam kedua dituntut dan hukumnya sunat." }
+        ]
+      },
+      {
+        question: "Ke manakah muka kita berpaling semasa memberi SALAM PERTAMA?",
+        arabic: "",
+        options: [
+          { text: "Ke arah kanan", isCorrect: true, rationale: "Salam pertama dimulakan dengan berpaling ke arah kanan." },
+          { text: "Ke arah kiri", isCorrect: false, rationale: "Salam ke arah kiri dilakukan untuk salam yang kedua." },
+          { text: "Ke arah depan", isCorrect: false, rationale: "Muka perlu berpaling ke kanan sehingga pipi kelihatan dari belakang." },
+          { text: "Ke arah bawah", isCorrect: false, rationale: "Tertib memberi salam adalah berpaling ke kanan dahulu." }
+        ]
+      },
+      {
+        question: "Apakah posisi duduk semasa membaca Tahiyyat Akhir?",
+        arabic: "",
+        options: [
+          { text: "Duduk Tawarruk", isCorrect: true, rationale: "Tahiyyat Akhir dibaca dalam posisi duduk Tawarruk (punggung ke lantai)." },
+          { text: "Duduk Iftirasy", isCorrect: false, rationale: "Duduk Iftirasy adalah untuk Tahiyyat Awal dan duduk antara dua sujud." },
+          { text: "Duduk Bersila", isCorrect: false, rationale: "Posisi sunnah Tahiyyat Akhir ialah duduk Tawarruk." },
+          { text: "Berdiri tegak", isCorrect: false, rationale: "Tahiyyat dibaca secara duduk, bukan berdiri." }
+        ]
+      },
+      {
+        question: "Apakah lafaz salam yang paling ringkas dan sah dalam solat?",
+        arabic: "السَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ",
+        options: [
+          { text: "Assalamualaikum", isCorrect: true, rationale: "Lafaz paling ringkas dan sah sekurang-kurangnya ialah 'Assalamualaikum'." },
+          { text: "Subhanallah", isCorrect: false, rationale: "'Subhanallah' ialah lafaz tasbih, bukan lafaz salam." },
+          { text: "Alhamdulillah", isCorrect: false, rationale: "'Alhamdulillah' ialah lafaz tahmid, bukan salam solat." },
+          { text: "Allahu Akbar", isCorrect: false, rationale: "'Allahu Akbar' ialah takbir, bukan bacaan salam." }
+        ]
+      }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let canAnswer = true;
+
+    function startQuiz() {
+      document.getElementById('welcome-screen').classList.add('hidden');
+      document.getElementById('quiz-screen').classList.remove('hidden');
+      currentQuestionIndex = 0;
+      score = 0;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      canAnswer = true;
+      const q = questions[currentQuestionIndex];
+
+      // Update Header & Progress
+      document.getElementById('question-number').innerText = `Soalan ${currentQuestionIndex + 1}/10`;
+      document.getElementById('score-display').innerText = `Markah: ${score}`;
+      const progressPercent = ((currentQuestionIndex + 1) / questions.length) * 100;
+      document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+      // Reset Feedback & Next Button
+      document.getElementById('feedback-box').classList.add('hidden');
+      document.getElementById('next-btn').classList.add('hidden');
+
+      // Set Question Text
+      document.getElementById('question-text').innerText = q.question;
+      const arabicSubtext = document.getElementById('arabic-subtext');
+      if (q.arabic) {
+        arabicSubtext.innerText = q.arabic;
+        arabicSubtext.classList.remove('hidden');
+      } else {
+        arabicSubtext.classList.add('hidden');
+      }
+
+      // Render Options
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+
+      q.options.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.className = `w-full py-4 px-6 bg-white hover:bg-yellow-50 text-gray-800 font-bold text-xl md:text-2xl rounded-2xl border-3 border-gray-200 shadow-md transition text-left flex items-center space-x-3 active:scale-98`;
+        btn.innerHTML = `
+          <span class="bg-purple-200 text-purple-800 rounded-xl w-10 h-10 flex items-center justify-center font-heading text-xl shrink-0">${String.fromCharCode(65 + index)}</span>
+          <span class="flex-grow">${opt.text}</span>
+        `;
+        btn.onclick = () => selectOption(index);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function selectOption(selectedIndex) {
+      if (!canAnswer) return;
+      canAnswer = false;
+
+      const q = questions[currentQuestionIndex];
+      const selectedOpt = q.options[selectedIndex];
+      const optionsButtons = document.getElementById('options-container').children;
+
+      // Disable buttons
+      for (let btn of optionsButtons) {
+        btn.disabled = true;
+        btn.classList.remove('hover:bg-yellow-50');
+      }
+
+      const feedbackBox = document.getElementById('feedback-box');
+      const feedbackTitle = document.getElementById('feedback-title');
+      const feedbackText = document.getElementById('feedback-text');
+
+      if (selectedOpt.isCorrect) {
+        score++;
+        document.getElementById('score-display').innerText = `Markah: ${score}`;
+        optionsButtons[selectedIndex].classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+        
+        feedbackBox.className = "p-4 rounded-2xl text-left border-2 bg-emerald-100 border-emerald-400 text-emerald-900 block";
+        feedbackTitle.innerText = "✅ TEPAT SEKALI!";
+        feedbackText.innerText = selectedOpt.rationale;
+      } else {
+        optionsButtons[selectedIndex].classList.add('bg-red-100', 'border-red-400', 'text-red-900');
+        
+        // Highlight correct option
+        q.options.forEach((opt, i) => {
+          if (opt.isCorrect) {
+            optionsButtons[i].classList.add('bg-emerald-100', 'border-emerald-500');
+          }
+        });
+
+        feedbackBox.className = "p-4 rounded-2xl text-left border-2 bg-red-100 border-red-400 text-red-900 block";
+        feedbackTitle.innerText = "❌ KURANG TEPAT!";
+        feedbackText.innerText = selectedOpt.rationale;
+      }
+
+      document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      document.getElementById('quiz-screen').classList.add('hidden');
+      document.getElementById('result-screen').classList.remove('hidden');
+
+      const finalScore = document.getElementById('final-score');
+      const resultMessage = document.getElementById('result-message');
+      const resultIcon = document.getElementById('result-icon');
+
+      finalScore.innerText = `${score} / 10`;
+
+      if (score === 10) {
+        resultIcon.innerText = "🌟🏆🌟";
+        resultMessage.innerText = "HEBAT! Anda memang Pakar Kem Bestari Solat!";
+      } else if (score >= 7) {
+        resultIcon.innerText = "👏🎉";
+        resultMessage.innerText = "SYABAS! Bacaan solat anda sangat baik!";
+      } else if (score >= 5) {
+        resultIcon.innerText = "👍😊";
+        resultMessage.innerText = "BAGUS! Teruskan berlatih bacaan solat ya!";
+      } else {
+        resultIcon.innerText = "💪📖";
+        resultMessage.innerText = "JANGAN PUTUS ASA! Ulang kaji semula bersama ustaz / ustazah ya!";
+      }
+    }
+
+    function resetQuiz() {
+      document.getElementById('result-screen').classList.add('hidden');
+      document.getElementById('welcome-screen').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
